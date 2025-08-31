@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gioco Pong</title>
+<style>
+    /* Stili globali per il corpo della pagina */
+    body {
+        background-color: #1a1a1a; /* Sfondo scuro per un look più moderno */
+        display: flex; /* Utilizza Flexbox per centrare il contenuto */
+        flex-direction: column; /* Organizza gli elementi in colonna */
+        justify-content: center; /* Centra verticalmente */
+        align-items: center; /* Centra orizzontalmente */
+        min-height: 100vh; /* Assicura che il corpo occupi almeno l'intera altezza della viewport */
+        margin: 0; /* Rimuove i margini predefiniti del browser */
+        font-family: 'Press Start 2P', cursive; /* Font in stile retrò per un'atmosfera arcade */
+        color: #eee; /* Colore del testo chiaro */
+        overflow: hidden; /* Nasconde lo scrollbar se il contenuto è più grande della viewport */
+    }
+
+    /* Importa un font da Google Fonts per uno stile retrò */
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    /* Stili per il titolo del gioco */
+    h1 {
+        font-size: 2.5rem; /* Dimensione del titolo */
+        margin-bottom: 5px; /* Margine inferiore ulteriormente ridotto */
+        color: #00ff00; /* Colore verde neon */
+        text-shadow: 0 0 10px #00ff00; /* Ombra neon per un effetto luminoso */
+    }
+
+    /* Stili per il canvas del gioco */
+    #gameCanvas {
+        border: 4px solid #00ff00; /* Bordo verde neon */
+        background-color: #000; /* Sfondo nero per il campo da gioco */
+        box-shadow: 0 0 20px #00ff00; /* Ombra esterna neon */
+        border-radius: 8px; /* Angoli arrotondati */
+        display: block; /* Rimuove lo spazio extra sotto il canvas */
+        width: 90%; /* Rende il canvas più fluido e responsivo */
+        max-width: 800px; /* Limita la larghezza massima */
+        aspect-ratio: 16 / 9; /* Modificato per allungare il campo in larghezza (rapporto 16:9) */
+    }
+
+    /* Stili per la bacheca dei punteggi */
+    #scoreBoard {
+        display: flex; /* Utilizza Flexbox per disporre i punteggi */
+        justify-content: space-around; /* Spazia uniformemente gli elementi */
+        width: 90%; /* Larghezza proporzionale */
+        max-width: 800px; /* Larghezza massima */
+        margin-top: 5px; /* Margine superiore ulteriormente ridotto */
+        font-size: 2rem; /* Dimensione del font */
+        color: #00ff00; /* Colore verde neon */
+        text-shadow: 0 0 8px #00ff00; /* Ombra neon */
+    }
+
+    /* Stili per la casella dei messaggi (Game Over, ecc.) */
+    #messageBox {
+        background-color: rgba(0, 0, 0, 0.9); /* Sfondo più scuro per il pop-up */
+        border: 2px solid #00ff00; /* Bordo verde neon */
+        border-radius: 8px; /* Angoli arrotondati */
+        padding: 20px; /* Spaziatura interna */
+        font-size: 1.5rem; /* Dimensione del font */
+        color: #00ff00; /* Colore verde neon */
+        text-shadow: 0 0 5px #00ff00; /* Ombra neon */
+        display: none; /* Nascosto di default, mostrato via JavaScript */
+        text-align: center; /* Centra il testo */
+        box-shadow: 0 0 25px #00ff00; /* Ombra esterna neon */
+        
+        /* Stili per il posizionamento come pop-up */
+        position: fixed; /* Posizionamento fisso rispetto alla viewport */
+        top: 50%; /* Centra verticalmente */
+        left: 50%; /* Centra orizzontalmente */
+        transform: translate(-50%, -50%); /* Trasforma per un centramento perfetto */
+        z-index: 100; /* Assicura che sia sopra gli altri elementi */
+        max-width: 90%; /* Larghezza massima per responsività */
+        width: 400px; /* Larghezza fissa per il pop-up */
+
+        /* Aggiunto per centrare il pulsante "Gioca Ancora" */
+        display: flex; /* Usa flexbox per il layout interno */
+        flex-direction: column; /* Organizza gli elementi in colonna */
+        align-items: center; /* Centra orizzontalmente gli elementi figli */
+        justify-content: center; /* Centra verticalmente gli elementi figli */
+    }
+
+    /* Stili per il contenitore delle impostazioni iniziali (pop-up) */
+    #gameSetup {
+        background-color: rgba(0, 0, 0, 0.9); /* Sfondo più scuro per il pop-up */
+        border: 2px solid #00ff00;
+        border-radius: 8px;
+        padding: 30px;
+        font-size: 1.2rem;
+        color: #00ff00;
+        text-shadow: 0 0 5px #00ff00;
+        text-align: center;
+        box-shadow: 0 0 25px #00ff00; /* Ombra più intensa */
+        
+        /* Stili per il posizionamento e l'overlay */
+        position: fixed; /* Posizionamento fisso rispetto alla viewport */
+        top: 50%; /* Centra verticalmente */
+        left: 50%; /* Centra orizzontalmente */
+        transform: translate(-50%, -50%); /* Trasforma per un centramento perfetto */
+        z-index: 100; /* Assicura che sia sopra gli altri elementi */
+        max-width: 90%; /* Larghezza massima per responsività */
+        width: 400px; /* Larghezza fissa per il pop-up */
+
+        /* Aggiunto per centrare gli elementi figli del pop-up */
+        display: flex; /* Usa flexbox per il layout interno */
+        flex-direction: column; /* Organizza gli elementi in colonna */
+        align-items: center; /* Centra orizzontalmente gli elementi figli */
+        gap: 15px; /* Spazio tra gli elementi */
+    }
+
+    /* Stili per l'overlay che oscurerà lo sfondo */
+    #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8); /* Sfondo nero semi-trasparente */
+        z-index: 99; /* Appena sotto il pop-up */
+        display: none; /* Nascosto di default */
+    }
+
+    #gameSetup label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    #gameSetup input[type="text"],
+    #gameSetup input[type="number"],
+    #gameSetup select { /* Aggiunto stile per il selettore */
+        width: 80%;
+        padding: 10px;
+        border: 2px solid #00ff00;
+        background-color: #000;
+        color: #eee;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 1rem;
+        border-radius: 5px;
+        text-align: center;
+        outline: none; /* Rimuove il bordo di focus predefinito */
+        appearance: none; /* Rimuove lo stile predefinito del sistema operativo per il select */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url('data:image/svg+xml;utf8,<svg fill="%23eee" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>'); /* Freccia personalizzata */
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 20px;
+    }
+
+    #gameSetup input[type="text"]:focus,
+    #gameSetup input[type="number"]:focus,
+    #gameSetup select:focus { /* Aggiunto stile per il selettore */
+        box-shadow: 0 0 10px #00ff00; /* Effetto luminoso al focus */
+    }
+
+    /* Stili per i pulsanti Start e Restart */
+    #startButton, #restartButton {
+        background-color: #00ff00; /* Verde neon */
+        color: #1a1a1a; /* Testo scuro */
+        border: none; /* Rimuove il bordo */
+        padding: 15px 30px; /* Spaziatura interna */
+        margin-top: 30px; /* Margine superiore */
+        font-family: 'Press Start 2P', cursive; /* Font in stile retrò */
+        font-size: 1.2rem; /* Dimensione del font */
+        border-radius: 5px; /* Angoli arrotondati */
+        cursor: pointer; /* Cambia il cursore al passaggio del mouse */
+        box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4); /* Ombra più pronunciata */
+        transition: all 0.2s ease; /* Transizione fluida per gli effetti hover/active */
+    }
+
+    /* Effetto hover per i pulsanti */
+    #startButton:hover, #restartButton:hover {
+        background-color: #00cc00; /* Verde leggermente più scuro */
+        transform: translateY(-3px); /* Effetto "sollevamento" */
+        box-shadow: 0 8px 20px rgba(0, 255, 0, 0.6); /* Ombra più grande e intensa */
+    }
+
+    /* Effetto active (quando il pulsante viene clicclato) */
+    #startButton:active, #restartButton:active {
+        transform: translateY(0); /* Torna alla posizione originale */
+        box-shadow: 0 2px 5px rgba(0, 255, 0, 0.2); /* Ombra più piccola */
+    }
+
+    /* Stili per nascondere l'input del nome del giocatore 2 in modalità PC */
+    .hidden-input {
+        display: none;
+    }
+</style>
+</head>
+<body>
+<h1>PONG RETRÒ</h1>
+
+<div id="scoreBoard">
+    <div id="player1Score">Giocatore 1: 0</div>
+    <div id="player2Score">Giocatore 2: 0</div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- Overlay per oscurare lo sfondo quando il pop-up è attivo -->
+<div id="overlay"></div>
+
+<div id="gameSetup">
+    <h2>Impostazioni Partita</h2>
+    
+    <label for="gameModeSelect">Modalità di Gioco:</label>
+    <select id="gameModeSelect">
+        <option value="player-vs-player">Giocatore vs. Giocatore</option>
+        <option value="player-vs-pc">Giocatore vs. PC</option>
+    </select>
+
+    <label for="player1NameInput">Nome Giocatore 1:</label>
+    <input type="text" id="player1NameInput" value="Giocatore 1" maxlength="10">
+
+    <div id="player2NameContainer">
+        <label for="player2NameInput">Nome Giocatore 2:</label>
+        <input type="text" id="player2NameInput" value="Giocatore 2" maxlength="10">
+    </div>
+
+    <label for="winningScoreInput">Punteggio per vincere:</label>
+    <input type="number" id="winningScoreInput" value="5" min="1" max="20">
+
+    <button id="startButton">INIZIA GIOCO</button>
+</div>
+
+
+<div id="messageBox">
+    <p id="messageText"></p>
+    <button id="restartButton" style="display: none;">GIOCA ANCORA</button>
+    <a href="../../index.html" class="control-button text-center">Torna alla Home</a>
+</div>
+
+<script>
+// Riferimenti agli elementi HTML del DOM
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d'); // Contesto di rendering 2D del canvas
+const player1ScoreDisplay = document.getElementById('player1Score');
+const player2ScoreDisplay = document.getElementById('player2Score');
+const startButton = document.getElementById('startButton');
+const messageBox = document.getElementById('messageBox');
+const messageText = document.getElementById('messageText');
+const restartButton = document.getElementById('restartButton');
+const gameSetup = document.getElementById('gameSetup'); // Nuovo elemento per le impostazioni
+const player1NameInput = document.getElementById('player1NameInput'); // Input nome Giocatore 1
+const player2NameInput = document.getElementById('player2NameInput'); // Input nome Giocatore 2
+const winningScoreInput = document.getElementById('winningScoreInput'); // Input punteggio vittoria
+const overlay = document.getElementById('overlay'); // Nuovo riferimento all'overlay
+const gameModeSelect = document.getElementById('gameModeSelect'); // Selettore modalità di gioco
+const player2NameContainer = document.getElementById('player2NameContainer'); // Contenitore nome Giocatore 2
+
+// Variabili globali per le dimensioni degli elementi di gioco
+let racchettaWidth;
+let racchettaHeight;
+let pallinaSize;
+
+// Variabili globali per le posizioni degli elementi di gioco
+let racchetta1Y; // Posizione Y della racchetta del giocatore 1
+let racchetta2Y; // Posizione Y della racchetta del giocatore 2
+
+let pallinaX; // Posizione X della pallina
+let pallinaY; // Posizione Y della pallina
+let velocitàPallinaX; // Velocità orizzontale della pallina
+let velocitàPallinaY; // Velocità verticale della pallina
+
+// Variabili per i punteggi dei giocatori
+let player1Score = 0;
+let player2Score = 0;
+let winningScore = 5; // Punteggio per vincere, ora personalizzabile
+
+let player1Name = "Giocatore 1"; // Nome Giocatore 1, ora personalizzabile
+let player2Name = "Giocatore 2"; // Nome Giocatore 2, ora personalizzabile
+
+// Variabile di stato per controllare se il gioco è in esecuzione
+let gameRunning = false;
+let gameMode = 'player-vs-player'; // Modalità di gioco attuale (default: Giocatore vs Giocatore)
+
+// Oggetto per tenere traccia dello stato dei tasti premuti
+const tasti = {
+    W: false,
+    S: false,
+    Up: false,
+    Down: false
+};
+
+// Event listener per la pressione dei tasti (keydown)
+document.addEventListener('keydown', (e) => {
+    // Imposta a true lo stato del tasto corrispondente quando viene premuto
+    if (e.key === 'w' || e.key === 'W') tasti.W = true;
+    if (e.key === 's' || e.key === 'S') tasti.S = true;
+    if (gameMode === 'player-vs-player') { // I tasti freccia sono attivi solo in modalità PvP
+        if (e.key === 'ArrowUp') tasti.Up = true;
+        if (e.key === 'ArrowDown') tasti.Down = true;
+    }
+});
+
+// Event listener per il rilascio dei tasti (keyup)
+document.addEventListener('keyup', (e) => {
+    // Imposta a false lo stato del tasto corrispondente quando viene rilasciato
+    if (e.key === 'w' || e.key === 'W') tasti.W = false;
+    if (e.key === 's' || e.key === 'S') tasti.S = false;
+    if (gameMode === 'player-vs-player') { // I tasti freccia sono attivi solo in modalità PvP
+        if (e.key === 'ArrowUp') tasti.Up = false;
+        if (e.key === 'ArrowDown') tasti.Down = false;
+    }
+});
+
+// Event listener per il cambio di modalità di gioco
+gameModeSelect.addEventListener('change', (e) => {
+    gameMode = e.target.value;
+    if (gameMode === 'player-vs-pc') {
+        player2NameContainer.classList.add('hidden-input'); // Nasconde l'input del nome del giocatore 2
+        player2NameInput.value = "PC"; // Imposta il nome del giocatore 2 a "PC"
+    } else {
+        player2NameContainer.classList.remove('hidden-input'); // Mostra l'input del nome del giocatore 2
+        player2NameInput.value = "Giocatore 2"; // Resetta il nome del giocatore 2
+    }
+});
+
+
+// Funzione per inizializzare o resettare lo stato del gioco
+function initializeGame() {
+    // Imposta le dimensioni del canvas in base alla larghezza del suo contenitore
+    const containerWidth = canvas.clientWidth;
+    canvas.width = containerWidth;
+    canvas.height = containerWidth * (9/16); // Modificato per un rapporto d'aspetto 16:9 (più largo)
+
+    // Logga le dimensioni del canvas per debug
+    console.log("Canvas Width:", canvas.width, "Canvas Height:", canvas.height);
+
+    // Calcola le dimensioni degli elementi di gioco in modo proporzionale al canvas
+    racchettaWidth = canvas.width * 0.015; // 1.5% della larghezza del canvas
+    racchettaHeight = canvas.height * 0.15; // 15% dell'altezza del canvas
+    pallinaSize = canvas.width * 0.015; // 1.5% della larghezza del canvas
+
+    // Posizioni iniziali delle racchette (centrate verticalmente)
+    racchetta1Y = (canvas.height - racchettaHeight) / 2;
+    racchetta2Y = (canvas.height - racchettaHeight) / 2;
+
+    // Posizione iniziale della pallina (centrata)
+    pallinaX = canvas.width / 2;
+    pallinaY = canvas.height / 2;
+
+    // Velocità iniziale della pallina, proporzionale alla dimensione del canvas
+    velocitàPallinaX = (Math.random() > 0.5 ? 1 : -1) * canvas.width * 0.006; // Direzione casuale iniziale
+    velocitàPallinaY = (Math.random() > 0.5 ? 1 : -1) * canvas.height * 0.006; // Direzione casuale iniziale
+
+    // Resetta i punteggi e aggiorna la visualizzazione
+    player1Score = 0;
+    player2Score = 0;
+    player1ScoreDisplay.textContent = `${player1Name}: ${player1Score}`; // Usa il nome scelto
+    player2ScoreDisplay.textContent = `${player2Name}: ${player2Score}`; // Usa il nome scelto
+
+    // Nasconde la casella dei messaggi
+    messageBox.style.display = 'none';
+    restartButton.style.display = 'none';
+
+    // Mostra il pop-up delle impostazioni e l'overlay
+    gameSetup.style.display = 'flex';
+    overlay.style.display = 'block';
+
+    drawGame(); // Disegna lo stato iniziale del gioco
+}
+
+// Funzione per disegnare tutti gli elementi di gioco sul canvas
+function drawGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Pulisce l'intero canvas
+
+    // Disegna racchetta 1 (a sinistra)
+    ctx.fillStyle = '#00ff00'; // Colore verde neon
+    ctx.fillRect(0, racchetta1Y, racchettaWidth, racchettaHeight);
+
+    // Disegna racchetta 2 (a destra)
+    ctx.fillRect(canvas.width - racchettaWidth, racchetta2Y, racchettaWidth, racchettaHeight);
+
+    // Disegna la pallina (come un cerchio)
+    ctx.beginPath(); // Inizia un nuovo percorso di disegno
+    ctx.arc(pallinaX + pallinaSize / 2, pallinaY + pallinaSize / 2, pallinaSize / 2, 0, Math.PI * 2); // Disegna un cerchio
+    ctx.fillStyle = '#ff00ff'; // Colore magenta neon
+    ctx.fill(); // Riempi il cerchio
+
+    // Disegna la linea centrale tratteggiata
+    ctx.strokeStyle = '#333'; // Colore della linea
+    ctx.lineWidth = 2; // Spessore della linea
+    ctx.setLineDash([5, 15]); // Imposta il pattern tratteggiato (5px linea, 15px spazio)
+    ctx.beginPath(); // Inizia un nuovo percorso
+    ctx.moveTo(canvas.width / 2, 0); // Sposta all'inizio della linea (centro superiore)
+    ctx.lineTo(canvas.width / 2, canvas.height); // Disegna la linea fino al centro inferiore
+    ctx.stroke(); // Esegui il disegno della linea
+    ctx.setLineDash([]); // Resetta il pattern della linea per i disegni futuri
+}
+
+// Funzione per aggiornare la logica del gioco (movimento, collisioni, punteggio)
+function updateGame() {
+    if (!gameRunning) return; // Se il gioco non è in esecuzione, esci dalla funzione
+
+    const paddleSpeed = canvas.height * 0.01; // Velocità racchetta proporzionale all'altezza del canvas
+
+    // Muovi racchetta 1 in base ai tasti W e S
+    if (tasti.W && racchetta1Y > 0) racchetta1Y -= paddleSpeed;
+    if (tasti.S && racchetta1Y < canvas.height - racchettaHeight) racchetta1Y += paddleSpeed;
+
+    // Logica per il movimento della racchetta 2 (Giocatore o PC)
+    if (gameMode === 'player-vs-player') {
+        // Muovi racchetta 2 in base ai tasti freccia Su e Giù
+        if (tasti.Up && racchetta2Y > 0) racchetta2Y -= paddleSpeed;
+        if (tasti.Down && racchetta2Y < canvas.height - racchettaHeight) racchetta2Y += paddleSpeed;
+    } else if (gameMode === 'player-vs-pc') {
+        // Logica AI per la racchetta del PC
+        const centerRacchetta2 = racchetta2Y + racchettaHeight / 2;
+        const centerPallina = pallinaY + pallinaSize / 2;
+
+        // Il PC cerca di centrare la racchetta sulla pallina
+        if (centerRacchetta2 < centerPallina - racchettaHeight * 0.1) { // Aggiunto un offset per rendere l'AI meno perfetta
+            racchetta2Y += paddleSpeed * 0.8; // Velocità leggermente ridotta per l'AI
+        } else if (centerRacchetta2 > centerPallina + racchettaHeight * 0.1) {
+            racchetta2Y -= paddleSpeed * 0.8;
+        }
+
+        // Limita la racchetta del PC all'interno del canvas
+        if (racchetta2Y < 0) racchetta2Y = 0;
+        if (racchetta2Y > canvas.height - racchettaHeight) racchetta2Y = canvas.height - racchettaHeight;
+    }
+
+    // Muovi la pallina in base alla sua velocità
+    pallinaX += velocitàPallinaX;
+    pallinaY += velocitàPallinaY;
+
+    // Rimbalzo sui bordi superiore e inferiore del canvas
+    if (pallinaY <= 0 || pallinaY + pallinaSize >= canvas.height) {
+        velocitàPallinaY = -velocitàPallinaY; // Inverti la direzione verticale
+        // Qui si potrebbe aggiungere un effetto sonoro o visivo per il rimbalzo
+    }
+
+    // Gestione del rimbalzo con le racchette
+    // Racchetta sinistra
+    if (
+        pallinaX <= racchettaWidth && // La pallina ha raggiunto la posizione X della racchetta
+        pallinaY + pallinaSize >= racchetta1Y && // La pallina è all'interno della racchetta verticalmente (parte inferiore)
+        pallinaY <= racchetta1Y + racchettaHeight // La pallina è all'interno della racchetta verticalmente (parte superiore)
+    ) {
+        velocitàPallinaX = -velocitàPallinaX; // Inverti la direzione orizzontale
+        // Aumenta leggermente la velocità della pallina dopo il rimbalzo per aumentare la difficoltà
+        velocitàPallinaX *= 1.05;
+        velocitàPallinaY *= 1.05;
+        // Limita la velocità massima per evitare che diventi ingiocabile
+        if (Math.abs(velocitàPallinaX) > canvas.width * 0.02) velocitàPallinaX = Math.sign(velocitàPallinaX) * canvas.width * 0.02;
+        if (Math.abs(velocitàPallinaY) > canvas.height * 0.02) velocitàPallinaY = Math.sign(velocitàPallinaY) * canvas.height * 0.02;
+    }
+
+    // Racchetta destra
+    if (
+        pallinaX + pallinaSize >= canvas.width - racchettaWidth && // La pallina ha raggiunto la posizione X della racchetta
+        pallinaY + pallinaSize >= racchetta2Y && // La pallina è all'interno della racchetta verticalmente (parte inferiore)
+        pallinaY <= racchetta2Y + racchettaHeight // La pallina è all'interno della racchetta verticalmente (parte superiore)
+    ) {
+        velocitàPallinaX = -velocitàPallinaX; // Inverti la direzione orizzontale
+        // Aumenta leggermente la velocità della pallina dopo il rimbalzo
+        velocitàPallinaX *= 1.05;
+        velocitàPallinaY *= 1.05;
+        // Limita la velocità massima
+        if (Math.abs(velocitàPallinaX) > canvas.width * 0.02) velocitàPallinaX = Math.sign(velocitàPallinaX) * canvas.width * 0.02;
+        if (Math.abs(velocitàPallinaY) > canvas.height * 0.02) velocitàPallinaY = Math.sign(velocitàPallinaY) * canvas.height * 0.02;
+    }
+
+    // Gestione del punteggio o del reset se la pallina esce dal campo
+    if (pallinaX < 0) { // Pallina esce a sinistra (punto per il giocatore 2)
+        player2Score++; // Incrementa il punteggio del giocatore 2
+        player2ScoreDisplay.textContent = `${player2Name}: ${player2Score}`; // Aggiorna la visualizzazione
+        resetBall(); // Resetta la pallina al centro
+        checkWinCondition(); // Controlla se il giocatore 2 ha vinto
+    } else if (pallinaX + pallinaSize > canvas.width) { // Pallina esce a destra (punto per il giocatore 1)
+        player1Score++; // Incrementa il punteggio del giocatore 1
+        player1ScoreDisplay.textContent = `${player1Name}: ${player1Score}`; // Aggiorna la visualizzazione
+        resetBall(); // Resetta la pallina al centro
+        checkWinCondition(); // Controlla se il giocatore 1 ha vinto
+    }
+}
+
+// Funzione per resettare la posizione e la direzione della pallina
+function resetBall() {
+    pallinaX = canvas.width / 2 - pallinaSize / 2; // Posiziona la pallina al centro orizzontalmente
+    pallinaY = canvas.height / 2 - pallinaSize / 2; // Posiziona la pallina al centro verticalmente
+    // Imposta una direzione iniziale casuale (sinistra o destra) e velocità proporzionale
+    velocitàPallinaX = (Math.random() > 0.5 ? 1 : -1) * canvas.width * 0.006;
+    velocitàPallinaY = (Math.random() > 0.5 ? 1 : -1) * canvas.height * 0.006;
+}
+
+// Funzione per controllare se un giocatore ha raggiunto il punteggio di vittoria
+function checkWinCondition() {
+    if (player1Score >= winningScore) {
+        endGame(`${player1Name} HA VINTO!`); // Termina il gioco con il messaggio di vittoria per il giocatore 1
+    } else if (player2Score >= winningScore) {
+        endGame(`${player2Name} HA VINTO!`); // Termina il gioco con il messaggio di vittoria per il giocatore 2
+    }
+}
+
+// Funzione per terminare il gioco e mostrare il messaggio finale
+function endGame(message) {
+    gameRunning = false; // Imposta lo stato del gioco su non in esecuzione
+    messageText.textContent = message; // Imposta il testo del messaggio
+    messageBox.style.display = 'flex'; // Mostra la casella dei messaggi come flexbox
+    restartButton.style.display = 'block'; // Mostra il pulsante "Gioca Ancora"
+    overlay.style.display = 'block'; // Mostra l'overlay quando il gioco finisce
+}
+
+// Loop di gioco principale che aggiorna e ridisegna il gioco ad ogni frame
+function gameLoop() {
+    updateGame(); // Aggiorna la logica del gioco
+    drawGame(); // Ridisegna gli elementi sul canvas
+    if (gameRunning) { // Continua il loop solo se il gioco è in esecuzione
+        requestAnimationFrame(gameLoop); // Richiede il prossimo frame per un'animazione fluida
+    }
+}
+
+// Event listener per il pulsante "INIZIA GIOCO"
+startButton.addEventListener('click', () => {
+    // Leggi i nomi e il punteggio massimo dagli input
+    player1Name = player1NameInput.value.trim() || "Giocatore 1";
+    gameMode = gameModeSelect.value; // Aggiorna la modalità di gioco
+
+    if (gameMode === 'player-vs-pc') {
+        player2Name = "PC";
+    } else {
+        player2Name = player2NameInput.value.trim() || "Giocatore 2";
+    }
+    
+    winningScore = parseInt(winningScoreInput.value);
+
+    // Validazione del punteggio massimo
+    if (isNaN(winningScore) || winningScore < 1) {
+        winningScore = 5; // Valore di default se l'input non è valido
+        winningScoreInput.value = 5; // Aggiorna l'input con il valore di default
+    }
+
+    // Aggiorna la visualizzazione dei nomi e del punteggio
+    player1ScoreDisplay.textContent = `${player1Name}: ${player1Score}`;
+    player2ScoreDisplay.textContent = `${player2Name}: ${player2Score}`;
+
+    gameSetup.style.display = 'none'; // Nasconde le impostazioni
+    overlay.style.display = 'none'; // Nasconde l'overlay
+    messageBox.style.display = 'none'; // Nasconde eventuali messaggi precedenti
+    gameRunning = true; // Imposta lo stato del gioco su in esecuzione
+    resetBall(); // Posiziona la pallina al centro e le dà una direzione iniziale
+    gameLoop(); // Avvia il loop di gioco
+});
+
+// Event listener per il pulsante "GIOCA ANCORA"
+restartButton.addEventListener('click', () => {
+    initializeGame(); // Resetta completamente lo stato del gioco, mostrando le impostazioni
+});
+
+// Inizializza il gioco quando la finestra è completamente caricata
+window.onload = initializeGame;
+
+// Gestisce il ridimensionamento della finestra per mantenere la responsività
+// Ricalcola le dimensioni e riposiziona gli elementi quando la finestra viene ridimensionata
+window.addEventListener('resize', initializeGame);
+</script>
+</body>
+</html>

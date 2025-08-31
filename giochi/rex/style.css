@@ -1,0 +1,79 @@
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+#screen {
+    width: 99vw;
+    height: 80vh; /*35vh è ottimale */
+    margin: 0 auto;
+    margin-top: 25px;
+    border: 1px solid black;
+    position: relative; /* Aggiunto per il posizionamento relativo */
+    background-color: #f7f7f7; /* Sfondo chiaro per lo schermo */
+    overflow: hidden; /* Nasconde i nemici che escono dallo schermo */
+}
+
+#ground {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20px; /* Altezza della linea del terreno */
+    background-color: #ccc; /* Colore del terreno */
+    border-top: 1px solid #999;
+}
+
+#logo {
+    position: absolute; /* Posizionamento assoluto rispetto al contenitore */
+    top: 10px; /* Distanza dall'alto */
+    right: 10px; /* Distanza dalla destra */
+    height: 50px; /* Altezza dell'immagine; puoi modificarla secondo necessità */
+    width: auto; /* Mantiene le proporzioni dell'immagine */
+}
+
+#dino {
+    height: 50px;
+    position: absolute; 
+    bottom: 20px; /* Posizione iniziale del dinosauro sulla linea del terreno */
+    left: 4%;
+    transition: all 0.1s ease-out; /* Transizione per il salto e l'abbassamento */
+}
+
+.dino-duck {
+    height: 30px; /* Altezza ridotta quando si abbassa */
+    /* bottom rimane 20px, quindi si abbassa dalla parte superiore */
+}
+
+.jump {
+    animation: jump 0.8s ease-out; /* Animazione di salto */
+}
+
+@keyframes jump {
+    0% {bottom: 20px;}
+    30% {bottom: 120px;} /* Salto più alto */
+    70% {bottom: 70px;}
+    100% {bottom: 20px;}
+}
+
+.enemy-instance {
+    position: absolute; 
+    height: 48px; /* Altezza di default per i nemici (cactus) */
+}
+
+#start-message, #pause-message {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: #333;
+    font-family: 'Inter', sans-serif;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    z-index: 10; /* Per assicurarsi che sia sopra gli altri elementi */
+}

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tris</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+            overflow: auto; /* Allow scrolling if content overflows */
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #2d3748; /* Slightly lighter dark background */
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            gap: 1.5rem;
+            max-width: 90%;
+            width: 500px; /* Fixed width for game container */
+            box-sizing: border-box;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #4299e1; /* Blue */
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .status-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #a0aec0;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 300px; /* Fixed size for the board */
+            height: 300px;
+            background-color: #000;
+            border: 4px solid #4a5568;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+            font-weight: bold;
+            color: #e2e8f0;
+            border: 2px solid #4a5568;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .cell:hover:not(.occupied) {
+            background-color: #333;
+        }
+
+        .cell.X {
+            color: #f56565; /* Red for X */
+        }
+
+        .cell.O {
+            color: #48bb78; /* Green for O */
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .control-button {
+            background-color: #4299e1; /* Blue */
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            border: none;
+            outline: none;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .control-button:hover {
+            background-color: #3182ce; /* Darker blue */
+            transform: translateY(-1px);
+        }
+
+        .control-button:active {
+            background-color: #2b6cb0; /* Even darker blue */
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-box {
+            background-color: #4a5568;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            width: 100%;
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-box h3 {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #a0aec0;
+        }
+
+        .info-box p {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #e2e8f0;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+            width: 400px;
+            color: #e2e8f0;
+            text-align: left;
+        }
+
+        .modal-content h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            color: #a0aec0;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .modal-content input[type="text"] {
+            width: calc(100% - 1.5rem);
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #4a5568;
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+
+        .modal-content .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-content .modal-buttons button {
+            background-color: #4299e1;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            border: none;
+            outline: none;
+            margin-top: 0;
+        }
+
+        .modal-content .modal-buttons button:hover {
+            background-color: #3182ce;
+        }
+
+        .modal-content ul {
+            list-style: none;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #4a5568;
+            border-radius: 0.5rem;
+            background-color: #1a202c;
+            margin-bottom: 1rem;
+        }
+
+        .modal-content ul li {
+            padding: 0.75rem;
+            border-bottom: 1px solid #4a5568;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-content ul li:last-child {
+            border-bottom: none;
+        }
+
+        .modal-content ul li:hover {
+            background-color: #333;
+        }
+
+        .modal-content ul li span:first-child {
+            flex-grow: 1;
+        }
+
+        .modal-content ul li .delete-btn {
+            background-color: #f56565;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+            box-shadow: none;
+        }
+        .modal-content ul li .delete-btn:hover {
+            background-color: #e53e3e;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">Tris</h1>
+        <div id="statusDisplay" class="status-display"></div>
+        <div class="board" id="gameBoard">
+            <!-- Cells will be dynamically generated here -->
+        </div>
+        <div class="controls">
+            <div class="control-row">
+                <button id="pvpModeBtn" class="control-button">Giocatore vs Giocatore</button>
+                <button id="pvcModeBtn" class="control-button">Giocatore vs PC</button>
+            </div>
+            <div class="control-row">
+                <button id="resetGameBtn" class="control-button">Ricomincia Partita</button>
+            </div>
+            <div class="control-row">
+                <button id="viewHistoryBtn" class="control-button">Cronologia Partite</button>
+            </div>
+            <div class="info-box mt-4">
+                <h3>Punteggio</h3>
+                <p>Giocatore X: <span id="scoreX">0</span></p>
+                <p>Giocatore O: <span id="scoreO">0</span></p>
+                <p>Pareggi: <span id="scoreDraws">0</span></p>
+            </div>
+            <div class="control-row">
+                <button id="clearDataBtn" class="control-button" style="background-color: #f56565;">Elimina Dati</button>
+            </div>
+            <!-- Added Home Button -->
+            <div class="control-row mt-4">
+                <a href="../../index.html" class="control-button text-center">Torna alla Home</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="gameResultModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 id="gameResultText"></h2>
+            <div class="modal-buttons">
+                <button id="closeResultModalBtn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Cronologia Partite</h2>
+            <ul id="historyList"></ul>
+            <div class="modal-buttons">
+                <button id="closeHistoryModalBtn" style="background-color: #666;">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmClearDataModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Conferma Eliminazione Dati</h2>
+            <p>Sei sicuro di voler eliminare tutti i punteggi e la cronologia delle partite?</p>
+            <div class="modal-buttons">
+                <button id="confirmClearDataBtn" style="background-color: #f56565;">Conferma</button>
+                <button id="cancelClearDataBtn" style="background-color: #666;">Annulla</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game elements
+        const gameBoard = document.getElementById('gameBoard');
+        const statusDisplay = document.getElementById('statusDisplay');
+        const scoreXDisplay = document.getElementById('scoreX');
+        const scoreODisplay = document.getElementById('scoreO');
+        const scoreDrawsDisplay = document.getElementById('scoreDraws');
+
+        // Buttons
+        const pvpModeBtn = document.getElementById('pvpModeBtn');
+        const pvcModeBtn = document.getElementById('pvcModeBtn');
+        const resetGameBtn = document.getElementById('resetGameBtn');
+        const viewHistoryBtn = document.getElementById('viewHistoryBtn');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+
+        // Modals
+        const gameResultModal = document.getElementById('gameResultModal');
+        const gameResultText = document.getElementById('gameResultText');
+        const closeResultModalBtn = document.getElementById('closeResultModalBtn');
+
+        const historyModal = document.getElementById('historyModal');
+        const historyList = document.getElementById('historyList');
+        const closeHistoryModalBtn = document.getElementById('closeHistoryModalBtn');
+
+        const confirmClearDataModal = document.getElementById('confirmClearDataModal');
+        const confirmClearDataBtn = document.getElementById('confirmClearDataBtn');
+        const cancelClearDataBtn = document.getElementById('cancelClearDataBtn');
+
+        // Game state
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let gameActive = false;
+        let gameMode = 'player-vs-player'; // Default mode
+        let scores = { X: 0, O: 0, draws: 0 };
+        let gameHistory = []; // Stores objects like { winner: 'X'/'O'/'Draw', board: [], timestamp: Date.now() }
+
+        // LocalStorage Keys
+        const LOCAL_STORAGE_SCORES_KEY = 'tris_scores';
+        const LOCAL_STORAGE_HISTORY_KEY = 'tris_history';
+
+        // Winning conditions (indices of board array)
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        // --- Utility Functions ---
+
+        // Shows a custom message box (replaces alert/confirm)
+        function showMessageBox(message, type = 'info', onConfirm = null, onCancel = null) {
+            const existingBox = document.querySelector('.custom-message-box');
+            if (existingBox) existingBox.remove(); // Remove any previous message box
+
+            const messageBox = document.createElement('div');
+            messageBox.classList.add('custom-message-box', 'modal-overlay'); // Reusing modal-overlay styles
+            
+            let bgColor = '#4299e1'; // Blue for info
+            let btnColor = '#3182ce'; // Darker blue
+
+            if (type === 'success') {
+                bgColor = '#48bb78'; // Green
+                btnColor = '#38a169';
+            } else if (type === 'warning') {
+                bgColor = '#f0ad4e'; // Orange
+                btnColor = '#ec971f';
+            } else if (type === 'error') {
+                bgColor = '#f56565'; // Red
+                btnColor = '#e53e3e';
+            }
+
+            messageBox.innerHTML = `
+                <div class="modal-content" style="background-color: ${bgColor};">
+                    <p style="text-align: center; font-size: 1.2rem; margin-bottom: 1rem;">${message}</p>
+                    <div class="modal-buttons" style="justify-content: center;">
+                        <button class="confirm-btn" style="background-color: ${btnColor};">OK</button>
+                        ${onCancel ? `<button class="cancel-btn" style="background-color: #666;">Annulla</button>` : ''}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(messageBox);
+
+            messageBox.querySelector('.confirm-btn').onclick = () => {
+                messageBox.remove();
+                if (onConfirm) onConfirm();
+            };
+            if (onCancel) {
+                messageBox.querySelector('.cancel-btn').onclick = () => {
+                    messageBox.remove();
+                    if (onCancel) onCancel();
+                };
+            }
+        }
+
+        // --- Game Logic ---
+
+        // Initializes or resets the game board and state
+        function initGame() {
+            board = ['', '', '', '', '', '', '', '', ''];
+            currentPlayer = 'X';
+            gameActive = true;
+            statusDisplay.textContent = `È il turno di ${currentPlayer}`;
+            renderBoard();
+            loadGameResults(); // Load scores and history on game start
+            if (gameMode === 'player-vs-ai' && currentPlayer === 'O') {
+                setTimeout(makeAIMove, 500); // AI makes first move if it's 'O'
+            }
+        }
+
+        // Renders the current state of the board to the HTML
+        function renderBoard() {
+            gameBoard.innerHTML = '';
+            board.forEach((cell, index) => {
+                const cellElement = document.createElement('div');
+                cellElement.classList.add('cell');
+                cellElement.textContent = cell;
+                cellElement.dataset.index = index;
+                if (cell !== '') {
+                    cellElement.classList.add('occupied', cell); // Add X or O class for styling
+                }
+                cellElement.addEventListener('click', handleCellClick);
+                gameBoard.appendChild(cellElement);
+            });
+        }
+
+        // Handles a click on a cell
+        function handleCellClick(event) {
+            const clickedCell = event.target;
+            const clickedCellIndex = parseInt(clickedCell.dataset.index);
+
+            if (board[clickedCellIndex] !== '' || !gameActive) {
+                return;
+            }
+
+            board[clickedCellIndex] = currentPlayer;
+            clickedCell.textContent = currentPlayer;
+            clickedCell.classList.add('occupied', currentPlayer);
+
+            checkGameStatus();
+        }
+
+        // Checks if there's a winner or a draw
+        function checkGameStatus() {
+            let roundWon = false;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const winCondition = winningConditions[i];
+                let a = board[winCondition[0]];
+                let b = board[winCondition[1]];
+                let c = board[winCondition[2]];
+
+                if (a === '' || b === '' || c === '') {
+                    continue;
+                }
+                if (a === b && b === c) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                endGame(currentPlayer);
+                return;
+            }
+
+            let roundDraw = !board.includes('');
+            if (roundDraw) {
+                endGame('draw');
+                return;
+            }
+
+            // If no win or draw, switch player
+            switchPlayer();
+        }
+
+        // Switches the current player
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            statusDisplay.textContent = `È il turno di ${currentPlayer}`;
+
+            if (gameMode === 'player-vs-ai' && currentPlayer === 'O' && gameActive) {
+                setTimeout(makeAIMove, 700); // AI's turn after a short delay
+            }
+        }
+
+        // Ends the game, updates scores and history
+        function endGame(winner) {
+            gameActive = false;
+            let resultMessage = '';
+
+            if (winner === 'draw') {
+                resultMessage = 'Partita Pareggiata!';
+                scores.draws++;
+                gameHistory.push({ winner: 'Pareggio', board: [...board], timestamp: Date.now() });
+            } else {
+                resultMessage = `Il Giocatore ${winner} ha vinto!`;
+                scores[winner]++;
+                gameHistory.push({ winner: `Giocatore ${winner}`, board: [...board], timestamp: Date.now() });
+            }
+
+            updateScoreDisplay();
+            saveGameResults();
+            gameResultText.textContent = resultMessage;
+            gameResultModal.classList.remove('hidden');
+        }
+
+        // --- AI Logic (Simple Minimax-like) ---
+        function makeAIMove() {
+            if (!gameActive) return;
+
+            // 1. Check for a winning move
+            let bestMove = getWinningMove(board, 'O');
+            if (bestMove !== -1) {
+                applyAIMove(bestMove);
+                return;
+            }
+
+            // 2. Check to block opponent's winning move
+            bestMove = getWinningMove(board, 'X');
+            if (bestMove !== -1) {
+                applyAIMove(bestMove);
+                return;
+            }
+
+            // 3. Take the center
+            if (board[4] === '') {
+                applyAIMove(4);
+                return;
+            }
+
+            // 4. Take opposite corners
+            const corners = [0, 2, 6, 8];
+            for (let i = 0; i < corners.length; i++) {
+                const corner = corners[i];
+                const oppositeCorner = 8 - corner; // 0->8, 2->6, 6->2, 8->0
+                if (board[corner] === 'X' && board[oppositeCorner] === '') {
+                    applyAIMove(oppositeCorner);
+                    return;
+                }
+            }
+
+            // 5. Take any empty corner
+            const emptyCorners = corners.filter(index => board[index] === '');
+            if (emptyCorners.length > 0) {
+                applyAIMove(emptyCorners[Math.floor(Math.random() * emptyCorners.length)]);
+                return;
+            }
+
+            // 6. Take any empty side
+            const sides = [1, 3, 5, 7];
+            const emptySides = sides.filter(index => board[index] === '');
+            if (emptySides.length > 0) {
+                applyAIMove(emptySides[Math.floor(Math.random() * emptySides.length)]);
+                return;
+            }
+        }
+
+        // Helper for AI: checks if a player can win and returns the winning move index
+        function getWinningMove(currentBoard, player) {
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                // Check if two cells are occupied by the player and the third is empty
+                if (currentBoard[a] === player && currentBoard[b] === player && currentBoard[c] === '') return c;
+                if (currentBoard[a] === player && currentBoard[c] === player && currentBoard[b] === '') return b;
+                if (currentBoard[b] === player && currentBoard[c] === player && currentBoard[a] === '') return a;
+            }
+            return -1; // No winning move found
+        }
+
+        // Applies the AI's chosen move
+        function applyAIMove(index) {
+            board[index] = 'O'; // AI is always 'O'
+            document.querySelector(`[data-index="${index}"]`).textContent = 'O';
+            document.querySelector(`[data-index="${index}"]`).classList.add('occupied', 'O');
+            checkGameStatus();
+        }
+
+        // --- LocalStorage Management ---
+
+        // Saves current scores and game history to localStorage
+        function saveGameResults() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_SCORES_KEY, JSON.stringify(scores));
+                localStorage.setItem(LOCAL_STORAGE_HISTORY_KEY, JSON.stringify(gameHistory));
+            } catch (e) {
+                console.error("Errore nel salvataggio dei dati in localStorage:", e);
+                showMessageBox("Errore nel salvataggio dei dati locali.", 'error');
+            }
+        }
+
+        // Loads scores and game history from localStorage
+        function loadGameResults() {
+            try {
+                const savedScores = localStorage.getItem(LOCAL_STORAGE_SCORES_KEY);
+                const savedHistory = localStorage.getItem(LOCAL_STORAGE_HISTORY_KEY);
+
+                if (savedScores) {
+                    scores = JSON.parse(savedScores);
+                }
+                if (savedHistory) {
+                    gameHistory = JSON.parse(savedHistory);
+                }
+                updateScoreDisplay();
+            } catch (e) {
+                console.error("Errore nel caricamento dei dati da localStorage:", e);
+                showMessageBox("Errore nel caricamento dei dati locali.", 'error');
+            }
+        }
+
+        // Updates the score display in the UI
+        function updateScoreDisplay() {
+            scoreXDisplay.textContent = scores.X;
+            scoreODisplay.textContent = scores.O;
+            scoreDrawsDisplay.textContent = scores.draws;
+        }
+
+        // Clears all saved data from localStorage
+        function clearAllData() {
+            try {
+                localStorage.removeItem(LOCAL_STORAGE_SCORES_KEY);
+                localStorage.removeItem(LOCAL_STORAGE_HISTORY_KEY);
+                scores = { X: 0, O: 0, draws: 0 }; // Reset scores in memory
+                gameHistory = []; // Reset history in memory
+                updateScoreDisplay();
+                showMessageBox("Tutti i dati sono stati eliminati con successo!", 'success');
+                initGame(); // Start a new game after clearing data
+            } catch (e) {
+                console.error("Errore nell'eliminazione dei dati:", e);
+                showMessageBox("Errore nell'eliminazione dei dati.", 'error');
+            }
+        }
+
+        // --- Event Listeners ---
+
+        pvpModeBtn.addEventListener('click', () => {
+            gameMode = 'player-vs-player';
+            statusDisplay.textContent = `Modalità: Giocatore vs Giocatore`;
+            initGame();
+        });
+
+        pvcModeBtn.addEventListener('click', () => {
+            gameMode = 'player-vs-ai';
+            statusDisplay.textContent = `Modalità: Giocatore vs PC`;
+            initGame();
+        });
+
+        resetGameBtn.addEventListener('click', () => {
+            initGame();
+        });
+
+        viewHistoryBtn.addEventListener('click', () => {
+            historyModal.classList.remove('hidden');
+            historyList.innerHTML = ''; // Clear previous list
+
+            if (gameHistory.length === 0) {
+                historyList.innerHTML = '<li style="text-align: center; color: #a0aec0;">Nessuna partita giocata ancora.</li>';
+                return;
+            }
+
+            gameHistory.forEach((game, index) => {
+                const listItem = document.createElement('li');
+                const date = new Date(game.timestamp).toLocaleString();
+                let boardPreview = game.board.map(cell => cell === '' ? '_' : cell).join(' '); // Simple board preview
+
+                listItem.innerHTML = `
+                    <span>Partita ${index + 1}: ${game.winner}</span>
+                    <span style="font-size: 0.8em; color: #a0aec0;">(${date})</span>
+                    <span style="font-family: monospace; font-size: 0.9em; margin-top: 0.5em; display: block;">${boardPreview}</span>
+                `;
+                historyList.appendChild(listItem);
+            });
+        });
+
+        closeResultModalBtn.addEventListener('click', () => {
+            gameResultModal.classList.add('hidden');
+        });
+
+        closeHistoryModalBtn.addEventListener('click', () => {
+            historyModal.classList.add('hidden');
+        });
+
+        clearDataBtn.addEventListener('click', () => {
+            confirmClearDataModal.classList.remove('hidden');
+        });
+
+        confirmClearDataBtn.addEventListener('click', () => {
+            confirmClearDataModal.classList.add('hidden');
+            clearAllData();
+        });
+
+        cancelClearDataBtn.addEventListener('click', () => {
+            confirmClearDataModal.classList.add('hidden');
+        });
+
+        // Initial game setup on load
+        window.onload = () => {
+            initGame();
+        };
+    </script>
+</body>
+</html>
