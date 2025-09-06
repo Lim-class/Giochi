@@ -64,7 +64,7 @@ function startGame() {
         gameStarted = true;
         startMessage.style.display = "none";
         dinoRunInterval = setInterval(dinoRun, 70);
-        spawnEnemy(); 
+        spawnEnemy();
         enemySpawnInterval = setInterval(spawnEnemy, Math.random() * (1500 - 700) + 700); // Intervallo di generazione più veloce
         gameAnimationFrame = requestAnimationFrame(gameLoop);
     }
@@ -150,9 +150,9 @@ function checkCollision() {
         var enemyRect = enemies[i].getBoundingClientRect();
         
         if (!(
-            dinoRect.right < enemyRect.left || 
-            dinoRect.left > enemyRect.right || 
-            dinoRect.bottom < enemyRect.top || 
+            dinoRect.right < enemyRect.left ||
+            dinoRect.left > enemyRect.right ||
+            dinoRect.bottom < enemyRect.top ||
             dinoRect.top > enemyRect.bottom
         )) {
             return true; // Collisione rilevata
@@ -242,4 +242,13 @@ document.addEventListener('keyup', function(event) {
     if (event.key === 'ArrowDown') {
         stopDucking();
     }
+});
+
+// Gestore per il tocco su dispositivi mobili
+document.getElementById('screen').addEventListener('touchstart', function(event) {
+    event.preventDefault(); // Impedisce lo zoom o altri comportamenti indesiderati
+    if (!gameStarted) {
+        startGame();
+    }
+    jump();
 });
