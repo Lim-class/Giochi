@@ -244,9 +244,9 @@ document.addEventListener('keyup', function(event) {
     }
 });
 
-// Gestore per il tocco su dispositivi mobili
-document.getElementById('screen').addEventListener('touchstart', function(event) {
-    event.preventDefault(); // Impedisce lo zoom o altri comportamenti indesiderati
+// Gestore per il tocco su dispositivi mobili (e click su desktop)
+document.getElementById('screen').addEventListener('click', function(event) {
+    console.log("Schermo cliccato/toccato!");
     if (!gameStarted) {
         startGame();
     }
