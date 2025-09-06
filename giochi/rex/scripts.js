@@ -1,7 +1,6 @@
 var dino = document.getElementById("dino");
 var startMessage = document.getElementById("start-message");
 var pauseMessage = document.getElementById("pause-message"); // Nuovo elemento per il messaggio di pausa
-var mobileJumpButton = document.getElementById("mobile-jump-button"); // Ottiene il nuovo bottone
 var scoreDisplay = document.createElement("div");
 var isJumping = false;
 var isDucking = false;
@@ -65,7 +64,7 @@ function startGame() {
         gameStarted = true;
         startMessage.style.display = "none";
         dinoRunInterval = setInterval(dinoRun, 70);
-        spawnEnemy(); 
+        spawnEnemy();
         enemySpawnInterval = setInterval(spawnEnemy, Math.random() * (1500 - 700) + 700); // Intervallo di generazione più veloce
         gameAnimationFrame = requestAnimationFrame(gameLoop);
     }
@@ -151,9 +150,9 @@ function checkCollision() {
         var enemyRect = enemies[i].getBoundingClientRect();
         
         if (!(
-            dinoRect.right < enemyRect.left || 
-            dinoRect.left > enemyRect.right || 
-            dinoRect.bottom < enemyRect.top || 
+            dinoRect.right < enemyRect.left ||
+            dinoRect.left > enemyRect.right ||
+            dinoRect.bottom < enemyRect.top ||
             dinoRect.top > enemyRect.bottom
         )) {
             return true; // Collisione rilevata
@@ -245,9 +244,9 @@ document.addEventListener('keyup', function(event) {
     }
 });
 
-// Aggiungi un gestore di eventi per il tocco sullo schermo
-mobileJumpButton.addEventListener('touchstart', function(event) {
-    event.preventDefault(); // Previene lo scorrimento
+// Gestore per il tocco su dispositivi mobili
+document.getElementById('screen').addEventListener('touchstart', function(event) {
+    event.preventDefault(); // Impedisce lo zoom o altri comportamenti indesiderati
     if (!gameStarted) {
         startGame();
     }
