@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruota della Fortuna Dinamica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+        }
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0c4a6e;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            font-size: 1.25rem;
+            color: #475569;
+            margin-bottom: 2rem;
+        }
+        .wheel-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 0 auto 2rem;
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                #ef4444 0% 12.5%,
+                #f59e0b 12.5% 25%,
+                #10b981 25% 37.5%,
+                #3b82f6 37.5% 50%,
+                #8b5cf6 50% 62.5%,
+                #ec4899 62.5% 75%,
+                #64748b 75% 87.5%,
+                #f97316 87.5% 100%
+            );
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+            transition: transform 4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .wheel-pointer {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #f87171;
+            z-index: 10;
+        }
+        .phrase-display {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            min-height: 4rem;
+        }
+        .letter-tile {
+            width: 2rem;
+            height: 2.5rem;
+            background-color: #cbd5e1;
+            border-radius: 0.375rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #334155;
+            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+        }
+        .letter-tile.guessed {
+            background-color: #6ee7b7;
+            transform: scale(1.1);
+        }
+        .input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .input-group input {
+            border: 2px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-size: 1.25rem;
+            width: 80px;
+            text-align: center;
+        }
+        .button {
+            padding: 0.75rem 1.5rem;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .spin-button {
+            background-color: #f97316;
+            color: #ffffff;
+        }
+        .spin-button:hover {
+            background-color: #ea580c;
+            transform: translateY(-2px);
+        }
+        .guess-button {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+        .guess-button:hover {
+            background-color: #1e40af;
+            transform: translateY(-2px);
+        }
+        .phrase-guess-input {
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem;
+        }
+        .new-game-button {
+            background-color: #10b981;
+            color: #ffffff;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .new-game-button:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+        }
+        .message-box {
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+            border: 2px solid #34d399;
+            text-align: left;
+        }
+        .message-box h3 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .message-box p {
+            font-size: 0.875rem;
+        }
+        .score-container {
+            margin-top: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e40af;
+        }
+        .start-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .start-screen input {
+            border: 2px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+        }
+        .token-display {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #475569;
+        }
+        .gift-animation {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 4rem;
+            animation: giftPop 1s ease-out forwards;
+        }
+        @keyframes giftPop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+<div class="game-container">
+    <h1 class="title">Ruota della Fortuna Dinamica</h1>
+    <p class="subtitle" id="subtitle">Scegli la modalità di gioco e poi gira la ruota!</p>
+    
+    <div id="mode-selection-screen">
+        <h2 class="text-2xl font-bold text-gray-700 mb-4">Scegli la Modalità</h2>
+        <button id="simple-mode-button" class="button guess-button mb-2 w-full">Modalità Semplice (Una Frase)</button>
+        <button id="tv-mode-button" class="button spin-button w-full">Modalità Televisiva (Round Veloci + 5 Round Classici)</button>
+    </div>
+
+    <div id="start-screen" class="start-screen hidden">
+        <h2 class="text-2xl font-bold text-gray-700">Inizia la Partita</h2>
+        <div id="player-inputs">
+            <input type="text" placeholder="Nome Giocatore 1" class="w-full mb-2">
+            <input type="text" placeholder="Nome Giocatore 2" class="w-full mb-2">
+        </div>
+        <div class="flex justify-between items-center">
+            <label class="text-gray-700">Numero di giocatori:</label>
+            <input type="number" id="player-count" value="1" min="1" class="w-20 text-center">
+        </div>
+        <button id="start-button" class="button guess-button">Avvia Partita</button>
+    </div>
+    
+    <div id="fast-round-screen" class="hidden">
+        <h2 class="title text-gray-700" id="fast-round-title"></h2>
+        <p class="subtitle" id="fast-round-subtitle"></p>
+        <div id="fast-round-phrase-display" class="phrase-display"></div>
+        <div class="input-group mt-8">
+            <input type="text" id="fast-phrase-guess-input" class="phrase-guess-input" placeholder="Indovina la frase intera...">
+            <button id="fast-phrase-guess-button" class="button guess-button">Indovina</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="hidden">
+        <p class="text-lg text-gray-600 mb-2" id="round-info"></p>
+        <p class="text-lg text-gray-600 mb-2" id="round-type-info"></p>
+        <div class="wheel-container">
+            <div class="wheel" id="wheel"></div>
+            <div class="wheel-pointer"></div>
+        </div>
+
+        <button id="spin-button" class="button spin-button mb-4">Gira la Ruota</button>
+        <button id="free-spin-button" class="button spin-button mb-4 hidden">Usa Free Spin</button>
+
+        <div id="phrase-display" class="phrase-display"></div>
+        
+        <div class="text-lg text-gray-600 mb-4">Turno di: <span id="current-player" class="font-bold text-blue-800"></span></div>
+
+        <div class="input-group">
+            <input type="text" id="consonant-input" maxlength="1" class="text-xl font-bold uppercase" placeholder="Consonante">
+            <button id="consonant-button" class="button guess-button">Indovina Consonante</button>
+        </div>
+        
+        <div class="input-group">
+            <input type="text" id="vowel-input" maxlength="1" class="text-xl font-bold uppercase" placeholder="Vocale">
+            <button id="vowel-button" class="button guess-button">Acquista Vocale (-€50)</button>
+        </div>
+        
+        <button id="jolly-button" class="button guess-button mb-4 hidden">Usa Jolly</button>
+
+        <div class="input-group">
+            <input type="text" id="phrase-guess-input" class="phrase-guess-input" placeholder="Indovina la frase intera...">
+            <button id="phrase-guess-button" class="button guess-button">Indovina Frase</button>
+        </div>
+
+        <div id="message-box" class="message-box hidden">
+            <h3 id="message-title"></h3>
+            <p id="message-text"></p>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg mt-4 shadow-inner border border-gray-200">
+            <h2 class="font-bold text-lg text-center mb-2">Punteggi Giocatori</h2>
+            <ul id="players-list" class="space-y-2 text-center"></ul>
+        </div>
+    </div>
+
+    <div id="final-round-screen" class="hidden">
+        <h2 class="title text-gray-700">Round Finale!</h2>
+        <p class="subtitle" id="final-round-subtitle">Vinci il tuo montepremi indovinando la frase!</p>
+        
+        <div id="final-prize-display" class="my-4">
+            <p class="text-xl font-bold text-green-700">Hai vinto un premio aggiuntivo di: <span id="final-prize-value">€0</span>!</p>
+        </div>
+
+        <div id="final-round-phrase" class="phrase-display mb-8"></div>
+        
+        <div id="final-round-inputs" class="input-group flex-col mb-4">
+            <p class="text-sm text-gray-600 mb-2">Scegli 3 consonanti e 1 vocale aggiuntive.</p>
+            <div class="flex items-center justify-center gap-2 mb-2">
+                <input type="text" id="final-consonants-choice" maxlength="3" class="text-xl font-bold uppercase w-40" placeholder="3 Consonanti">
+                <input type="text" id="final-vowel-choice" maxlength="1" class="text-xl font-bold uppercase w-20" placeholder="1 Vocale">
+                <button id="final-letter-button" class="button guess-button">Ok</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="final-phrase-guess-input" class="phrase-guess-input" placeholder="Hai 15 secondi per indovinare la frase...">
+            <button id="final-phrase-guess-button" class="button guess-button">Indovina</button>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg mt-4 shadow-inner border border-gray-200">
+            <h2 class="font-bold text-lg text-center mb-2">Punteggio Totale</h2>
+            <p class="text-2xl font-bold text-blue-800" id="final-score-display"></p>
+        </div>
+        
+        <button id="final-new-game-button" class="button new-game-button">Nuova Partita</button>
+    </div>
+</div>
+
+<script>
+    // Frasi per i vari round
+    const simplePhrases = [
+        "LA SCUOLA È BELLA",
+        "STUDIARE PER IL FUTURO",
+        "IL SOLE SPLENDE",
+        "LA CITTÀ DI ROMA",
+        "GIOCHIAMO A PALLONE",
+        "LA LUNA È D'ARGENTO",
+        "UN BICCHIERE D'ACQUA",
+        "L'ALBERO DELLA VITA",
+        "LA PINGUINO VOLANTE",
+        "SALTARE NEL VUOTO"
+    ];
+
+    const timeWheelPhrases = [
+        "L'IMPERO ROMANO CROLLA",
+        "SCOPERTA DELL'AMERICA NEL 1492",
+        "LA RIVOLUZIONE FRANCESE",
+        "IL CROLLO DEL MURO DI BERLINO",
+        "LA PRIMA GUERRA MONDIALE",
+        "L'ERA DELL'INFORMATICA"
+    ];
+
+    const musicalPhrases = [
+        "LA MUSICA È LA MIA VITA",
+        "IL CANTO È L'ANIMA",
+        "NOTE DI COLORE",
+        "SUONARE LA CHITARRA",
+        "LA SINFONIA DI MOZART",
+        "CANTIAMO SOTTO LA PIOGGIA"
+    ];
+
+    const mysteryPhrases = [
+        "IL MONTE BIANCO",
+        "IL MISTERO DI STONEHENGE",
+        "LA SIRENA DELLA DANIMARCA",
+        "LA SFINGE DI GIZA",
+        "IL MISTERO DI ATLANTIDE"
+    ];
+
+    const crosswordPhrases = [
+        "PALLONE PORTA CALCIO",
+        "MARE SOLE ESTATE",
+        "LIBRO STORIA SCUOLA",
+        "TRENO STAZIONE VIAGGIO",
+        "CANE GATTO ANIMALE DOMESTICO"
+    ];
+
+    const expressPhrases = [
+        "CORRERE VELOCE COME IL VENTO",
+        "TRENO IN STAZIONE",
+        "L'ESPRESSO FA BENE AL CUORE",
+        "LA CARTA D'IDENTITÀ",
+        "LA SCORSA VOLTA ERA TROPPO FACILE",
+        "NON C'È DUE SENZA TRE"
+    ];
+
+    const finalRoundPhrases = [
+        "VIVERE NELLA NATURA",
+        "CACCIA AL TESORO",
+        "UN SOGNO DIVENTA REALTÀ",
+        "LA SPERANZA È L'ULTIMA A MORIRE",
+        "ANDIAMO AL CINEMA"
+    ];
+
+    // Nuovi valori della ruota per i vari round
+    const wheelValues = {
+        'default': [100, "PASSA MANO", 300, 400, "BANCAROTTA", 500, "FREE SPIN", 700],
+        'musical': [100, 200, "JOLLY", 400, "REGALO", 600, 700, "BANCAROTTA"],
+        'mistero': [100, 200, 300, "MISTERO", 400, "MISTERO", 500, 600, 700, 1000, 1500, 2000, "BANCAROTTA"],
+        'cruciruota': [100, 200, 300, 400, 500, 600, 700, 1000, 1500, 2000, 2500, 3000, "BANCAROTTA"],
+        'express': [100, 200, 300, 400, "EXPRESS", 500, "EXPRESS", 600, 700, "EXPRESS", 1000, 1500, 2000, 2500, 3000, 4000, "BANCAROTTA"],
+        'ultimo': [100, 200, 300, 400, 500, 600, 700, 1000, 1500, 2000, 2500, 3000, 4000, 5000, "BANCAROTTA"]
+    };
+    
+    // Valori del premio finale
+    const finalPrizeValues = [1000, 1500, 2000, 2500, 3000, 4000, 5000];
+
+    const allConsonants = "BCDFGHJKLMNPQRSTVWXYZ";
+    const allVowels = "AEIOU";
+
+    let players = [];
+    let currentPlayerIndex = 0;
+    let currentPhrase = '';
+    let guessedLetters = new Set();
+    let isSpinning = false;
+    let wheelPrize = 0;
+    let gameMode = 'simple';
+    let roundIndex = -1; // -1: quick round, 0-4: classic rounds
+    let fastRoundIndex = 0;
+    let currentRoundType = '';
+
+    const modeSelectionScreen = document.getElementById('mode-selection-screen');
+    const simpleModeButton = document.getElementById('simple-mode-button');
+    const tvModeButton = document.getElementById('tv-mode-button');
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const fastRoundScreen = document.getElementById('fast-round-screen');
+    const finalRoundScreen = document.getElementById('final-round-screen');
+    const startButton = document.getElementById('start-button');
+    const playerCountInput = document.getElementById('player-count');
+    const playerInputsContainer = document.getElementById('player-inputs');
+    const playersList = document.getElementById('players-list');
+    const currentPlayerSpan = document.getElementById('current-player');
+    const subtitle = document.getElementById('subtitle');
+    const wheel = document.getElementById('wheel');
+    const spinButton = document.getElementById('spin-button');
+    const freeSpinButton = document.getElementById('free-spin-button');
+    const jollyButton = document.getElementById('jolly-button');
+    const phraseDisplay = document.getElementById('phrase-display');
+    const fastRoundPhraseDisplay = document.getElementById('fast-round-phrase-display');
+    const fastRoundTitle = document.getElementById('fast-round-title');
+    const fastRoundSubtitle = document.getElementById('fast-round-subtitle');
+    const roundInfo = document.getElementById('round-info');
+    const roundTypeInfo = document.getElementById('round-type-info');
+    const consonantInput = document.getElementById('consonant-input');
+    const consonantButton = document.getElementById('consonant-button');
+    const vowelInput = document.getElementById('vowel-input');
+    const vowelButton = document.getElementById('vowel-button');
+    const phraseGuessInput = document.getElementById('phrase-guess-input');
+    const phraseGuessButton = document.getElementById('phrase-guess-button');
+    const fastPhraseGuessInput = document.getElementById('fast-phrase-guess-input');
+    const fastPhraseGuessButton = document.getElementById('fast-phrase-guess-button');
+    const messageBox = document.getElementById('message-box');
+    const messageTitle = document.getElementById('message-box');
+    const messageText = document.getElementById('message-text');
+    const finalRoundPhraseDisplay = document.getElementById('final-round-phrase');
+    const finalConsonantsChoice = document.getElementById('final-consonants-choice');
+    const finalVowelChoice = document.getElementById('final-vowel-choice');
+    const finalLetterButton = document.getElementById('final-letter-button');
+    const finalPhraseGuessInput = document.getElementById('final-phrase-guess-input');
+    const finalPhraseGuessButton = document.getElementById('final-phrase-guess-button');
+    const finalScoreDisplay = document.getElementById('final-score-display');
+    const finalNewGameButton = document.getElementById('final-new-game-button');
+    const finalPrizeDisplay = document.getElementById('final-prize-display');
+    const finalPrizeValue = document.getElementById('final-prize-value');
+
+    function updatePlayerInputs() {
+        const count = parseInt(playerCountInput.value, 10);
+        playerInputsContainer.innerHTML = '';
+        for (let i = 1; i <= count; i++) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = `Nome Giocatore ${i}`;
+            input.className = 'w-full mb-2';
+            playerInputsContainer.appendChild(input);
+        }
+    }
+
+    function selectGameMode(mode) {
+        gameMode = mode;
+        modeSelectionScreen.classList.add('hidden');
+        startScreen.classList.remove('hidden');
+        subtitle.textContent = 'Inserisci i nomi dei giocatori e avvia la partita!';
+    }
+
+    function startGame() {
+        const inputs = playerInputsContainer.querySelectorAll('input');
+        players = Array.from(inputs).map(input => ({
+            name: input.value.trim() || `Giocatore ${Math.random().toString(36).substring(7)}`,
+            score: 0,
+            totalScore: 0,
+            freeSpins: 0,
+            jollys: 0
+        })).filter(player => player.name.trim() !== '');
+
+        if (players.length === 0) {
+            showMessage(true, 'Errore!', 'Per favore, inserisci almeno un nome per iniziare a giocare.');
+            return;
+        }
+
+        if (gameMode === 'tv') {
+            startScreen.classList.add('hidden');
+            fastRoundScreen.classList.remove('hidden');
+            startFastRound('timeWheel');
+        } else {
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            roundInfo.textContent = '';
+            initializeGame('default');
+        }
+    }
+
+    function startFastRound(type) {
+        currentRoundType = 'fast';
+        if (type === 'timeWheel') {
+            currentPhrase = timeWheelPhrases[Math.floor(Math.random() * timeWheelPhrases.length)];
+            fastRoundTitle.textContent = "La Ruota del Tempo";
+            fastRoundSubtitle.textContent = "Indovina la frase relativa ad eventi storici. Valore: 1,000€";
+            showMessage(true, "Round Veloce!", "Inizia La Ruota del Tempo! Le lettere appariranno una alla volta. Indovina la frase!");
+            revealLettersSequentially(fastRoundPhraseDisplay);
+        }
+        fastPhraseGuessInput.value = '';
+    }
+
+    function revealLettersSequentially(displayElement) {
+        displayElement.innerHTML = '';
+        let currentLetters = '';
+        currentPhrase.split('').forEach(char => {
+            const tile = document.createElement('div');
+            tile.classList.add('letter-tile');
+            if (char === ' ') {
+                tile.style.backgroundColor = 'transparent';
+                tile.style.boxShadow = 'none';
+                tile.style.width = '1rem';
+            }
+            displayElement.appendChild(tile);
+        });
+
+        let i = 0;
+        const interval = setInterval(() => {
+            if (i < currentPhrase.length) {
+                const char = currentPhrase[i];
+                if (char !== ' ') {
+                    const tile = displayElement.children[i];
+                    tile.textContent = char;
+                }
+                i++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 500);
+    }
+    
+    function handleFastPhraseGuess() {
+        const guess = fastPhraseGuessInput.value.trim().toUpperCase();
+        if (guess === currentPhrase) {
+            players[currentPlayerIndex].totalScore += 1000;
+            showMessage(true, 'Hai Vinto!', `Complimenti! Hai indovinato la frase. Vinci 1,000€ e inizi il prossimo round.`);
+            setTimeout(() => {
+                fastRoundScreen.classList.add('hidden');
+                gameScreen.classList.remove('hidden');
+                roundIndex = 0;
+                initializeGame('musical');
+            }, 3000);
+        } else {
+            showMessage(true, 'Sbagliato!', `Mi dispiace, la frase non è corretta. Riprova!`);
+        }
+    }
+
+    function initializeGame(roundType) {
+        currentRoundType = 'classic';
+        const roundPhrases = getRoundPhrases(roundType);
+        currentPhrase = roundPhrases[Math.floor(Math.random() * roundPhrases.length)];
+        guessedLetters.clear();
+        isSpinning = false;
+        wheelPrize = 0;
+        players.forEach(p => p.score = 0);
+        
+        let winnerIndex = players.reduce((maxIndex, player, currentIndex, arr) => {
+            return player.totalScore > arr[maxIndex].totalScore ? currentIndex : maxIndex;
+        }, 0);
+        currentPlayerIndex = winnerIndex; // Il vincitore del round precedente inizia
+        
+        updateRoundInfo(roundType);
+        updateDisplay();
+        showMessage(false);
+        spinButton.disabled = false;
+        freeSpinButton.classList.add('hidden');
+        jollyButton.classList.add('hidden');
+        consonantButton.disabled = true;
+        consonantInput.disabled = true;
+        consonantInput.value = '';
+        vowelButton.disabled = false;
+        vowelInput.disabled = false;
+        vowelInput.value = '';
+        phraseGuessButton.disabled = false;
+        phraseGuessInput.disabled = false;
+        phraseGuessInput.value = '';
+        updateWheelColors(roundType);
+    }
+
+    function getRoundPhrases(type) {
+        switch (type) {
+            case 'musical': return musicalPhrases;
+            case 'mistero': return mysteryPhrases;
+            case 'cruciruota': return crosswordPhrases;
+            case 'express': return expressPhrases;
+            case 'ultimo': return simplePhrases; // Using simple phrases for the final classic round
+            default: return simplePhrases;
+        }
+    }
+
+    function updateRoundInfo(type) {
+        const roundNames = ['Round Musicale', 'Mistero', 'CruciRuota', 'Express', 'Ultimo Round'];
+        roundTypeInfo.textContent = `Round: ${roundNames[roundIndex]}`;
+        roundInfo.textContent = `Round ${roundIndex + 1} di 5`;
+        subtitle.textContent = `Gira la ruota e indovina la frase!`;
+        if (type === 'cruciruota') {
+             showMessage(true, 'CruciRuota!', 'In questo round, le parole sono intersecate e accomunate da un criterio comune.');
+        }
+    }
+
+    function updateWheelColors(roundType) {
+        const wheelValuesForRound = wheelValues[roundType] || wheelValues['default'];
+        const segmentCount = wheelValuesForRound.length;
+        const degreesPerSegment = 360 / segmentCount;
+        let conicGradient = '';
+
+        const colors = [
+            '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b', '#f97316'
+        ];
+        
+        wheelValuesForRound.forEach((value, index) => {
+            const color = colors[index % colors.length];
+            const start = index * degreesPerSegment;
+            const end = (index + 1) * degreesPerSegment;
+            conicGradient += `${color} ${start}deg ${end}deg, `;
+        });
+        
+        conicGradient = conicGradient.slice(0, -2);
+        wheel.style.background = `conic-gradient(${conicGradient})`;
+    }
+
+    function updateDisplay() {
+        // Aggiorna la frase
+        phraseDisplay.innerHTML = '';
+        currentPhrase.split('').forEach((char) => {
+            const tile = document.createElement('div');
+            tile.classList.add('letter-tile');
+            if (char === ' ') {
+                tile.style.backgroundColor = 'transparent';
+                tile.style.boxShadow = 'none';
+                tile.textContent = '';
+                tile.style.width = '1rem';
+            } else {
+                if (guessedLetters.has(char)) {
+                    tile.textContent = char;
+                    tile.classList.add('guessed');
+                } else {
+                    tile.textContent = '_';
+                }
+            }
+            phraseDisplay.appendChild(tile);
+        });
+
+        // Aggiorna la lista dei giocatori
+        playersList.innerHTML = '';
+        players.forEach((player, index) => {
+            const playerItem = document.createElement('li');
+            playerItem.classList.add('p-2', 'rounded-lg', 'font-bold', 'transition-all', 'duration-300');
+            if (index === currentPlayerIndex) {
+                playerItem.classList.add('bg-blue-200', 'text-blue-800', 'scale-105');
+            }
+            const jollyText = player.jollys > 0 ? ` 🃏x${player.jollys}` : '';
+            const freeSpinText = player.freeSpins > 0 ? ` 🔄x${player.freeSpins}` : '';
+            playerItem.textContent = `${player.name}: €${player.score} (Totale: €${player.totalScore})${jollyText}${freeSpinText}`;
+            playersList.appendChild(playerItem);
+        });
+        
+        // Controlla i pulsanti dei gettoni
+        if (players[currentPlayerIndex].jollys > 0) {
+            jollyButton.classList.remove('hidden');
+        } else {
+            jollyButton.classList.add('hidden');
+        }
+        if (players[currentPlayerIndex].freeSpins > 0) {
+            freeSpinButton.classList.remove('hidden');
+            spinButton.classList.add('hidden');
+        } else {
+            freeSpinButton.classList.add('hidden');
+            spinButton.classList.remove('hidden');
+        }
+
+        currentPlayerSpan.textContent = players[currentPlayerIndex].name;
+    }
+
+    function nextTurn() {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+        spinButton.disabled = false;
+        consonantButton.disabled = true;
+        consonantInput.disabled = true;
+        updateDisplay();
+        showMessage(true, 'Prossimo turno!', `È il turno di ${players[currentPlayerIndex].name}.`);
+    }
+
+    function showMessage(visible, title = '', text = '') {
+        if (visible) {
+            messageBox.classList.remove('hidden');
+            messageTitle.textContent = title;
+            messageText.textContent = text;
+        } else {
+            messageBox.classList.add('hidden');
+        }
+    }
+    
+    function handleSpin() {
+        if (isSpinning) return;
+        isSpinning = true;
+        spinButton.disabled = true;
+        freeSpinButton.disabled = true;
+        consonantButton.disabled = true;
+        consonantInput.disabled = true;
+        vowelButton.disabled = true;
+        vowelInput.disabled = true;
+        phraseGuessButton.disabled = true;
+        phraseGuessInput.disabled = true;
+        showMessage(false);
+
+        const currentWheel = wheelValues[getRoundName()] || wheelValues['default'];
+        const randomIndex = Math.floor(Math.random() * currentWheel.length);
+        const prize = currentWheel[randomIndex];
+        wheelPrize = prize;
+        
+        const degreesPerSegment = 360 / currentWheel.length;
+        const targetRotation = (360 * 5) + (360 - (degreesPerSegment * randomIndex));
+
+        wheel.style.transition = 'transform 4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        wheel.style.transform = `rotate(${targetRotation}deg)`;
+
+        setTimeout(() => {
+            isSpinning = false;
+            spinButton.disabled = false;
+            freeSpinButton.disabled = false;
+            consonantButton.disabled = false;
+            consonantInput.disabled = false;
+            vowelButton.disabled = false;
+            vowelInput.disabled = false;
+            phraseGuessButton.disabled = false;
+            phraseGuessInput.disabled = false;
+
+            if (prize === "BANCAROTTA") {
+                players[currentPlayerIndex].totalScore = 0;
+                players[currentPlayerIndex].score = 0;
+                showMessage(true, 'Bancarotta!', 'Hai perso tutti i tuoi soldi.');
+                nextTurn();
+            } else if (prize === "PASSA MANO") {
+                showMessage(true, 'Passa Mano!', 'Hai perso il tuo turno.');
+                nextTurn();
+            } else if (prize === "FREE SPIN") {
+                players[currentPlayerIndex].freeSpins++;
+                showMessage(true, 'Free Spin!', 'Hai vinto un gettone per un giro gratuito!');
+                nextTurn();
+            } else if (prize === "JOLLY") {
+                players[currentPlayerIndex].jollys++;
+                showMessage(true, 'Jolly!', 'Hai vinto un Jolly! Usalo per scegliere qualsiasi lettera.');
+                nextTurn();
+            } else if (prize === "REGALO") {
+                 let opponentIndex = (currentPlayerIndex + 1) % players.length;
+                 const giftAmount = 100;
+                 players[opponentIndex].score += giftAmount;
+                 showMessage(true, 'Regalo!', `Hai regalato €${giftAmount} a ${players[opponentIndex].name}!`);
+                 nextTurn();
+            } else {
+                showMessage(true, 'È il tuo turno!', `La ruota si ferma su €${wheelPrize}. Ora puoi indovinare una consonante o l'intera frase.`);
+            }
+            updateDisplay();
+        }, 4000); 
+    }
+    
+    function handleFreeSpin() {
+        if (players[currentPlayerIndex].freeSpins > 0) {
+            players[currentPlayerIndex].freeSpins--;
+            handleSpin();
+        }
+    }
+    
+    function handleJollyGuess() {
+        players[currentPlayerIndex].jollys--;
+        const guess = prompt("Scegli una lettera (consonante o vocale):").toUpperCase();
+        if (guess && guess.length === 1 && "ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(guess)) {
+            guessedLetters.add(guess);
+            let count = 0;
+            for (let i = 0; i < currentPhrase.length; i++) {
+                if (currentPhrase[i] === guess) {
+                    count++;
+                }
+            }
+            if (count > 0) {
+                 players[currentPlayerIndex].score += count * 50; //valore fisso per il Jolly
+                 showMessage(true, 'Jolly Usato!', `Hai usato il tuo Jolly! La lettera "${guess}" è presente ${count} volte.`);
+            } else {
+                 showMessage(true, 'Jolly Usato!', `Hai usato il tuo Jolly, ma la lettera "${guess}" non è presente.`)
+            }
+        } else {
+            players[currentPlayerIndex].jollys++; // Restituisce il jolly se l'input non è valido
+            showMessage(true, 'Errore Jolly!', "Input non valido. Il Jolly non è stato utilizzato.");
+        }
+        updateDisplay();
+        spinButton.disabled = false;
+    }
+
+    function handleConsonantGuess() {
+        const guess = consonantInput.value.trim().toUpperCase();
+        if (guess.length !== 1 || !allConsonants.includes(guess)) {
+            showMessage(true, 'Errore!', 'Inserisci una singola consonante valida.');
+            consonantInput.value = '';
+            return;
+        }
+        
+        if (guessedLetters.has(guess)) {
+            showMessage(true, 'Oops!', `La lettera "${guess}" è già stata indovinata.`);
+            consonantInput.value = '';
+            return;
+        }
+
+        guessedLetters.add(guess);
+        let count = 0;
+        for (let i = 0; i < currentPhrase.length; i++) {
+            if (currentPhrase[i] === guess) {
+                count++;
+            }
+        }
+        
+        if (count > 0) {
+            players[currentPlayerIndex].score += count * wheelPrize;
+            showMessage(true, 'Corretto!', `La lettera "${guess}" è presente ${count} volte.`);
+            spinButton.disabled = false;
+        } else {
+            showMessage(true, 'Sbagliato!', `Mi dispiace, la lettera "${guess}" non è nella frase.`);
+            nextTurn();
+        }
+
+        consonantInput.value = '';
+        consonantButton.disabled = true;
+        consonantInput.disabled = true;
+        updateDisplay();
+        
+        const allGuessed = currentPhrase.split('').every(char => char === ' ' || guessedLetters.has(char));
+        if (allGuessed) {
+            winRound();
+        }
+    }
+    
+    function handleVowelGuess() {
+        const guess = vowelInput.value.trim().toUpperCase();
+        if (guess.length !== 1 || !allVowels.includes(guess)) {
+            showMessage(true, 'Errore!', 'Per favore, inserisci una singola vocale valida.');
+            vowelInput.value = '';
+            return;
+        }
+
+        if (players[currentPlayerIndex].score < 50) {
+            showMessage(true, 'Punteggio Insufficiente!', 'Hai bisogno di almeno €50 per acquistare una vocale.');
+            return;
+        }
+        
+        if (guessedLetters.has(guess)) {
+            showMessage(true, 'Oops!', `La vocale "${guess}" è già stata indovinata.`);
+            vowelInput.value = '';
+            return;
+        }
+
+        players[currentPlayerIndex].score -= 50;
+        guessedLetters.add(guess);
+
+        let count = 0;
+        for (let i = 0; i < currentPhrase.length; i++) {
+            if (currentPhrase[i] === guess) {
+                count++;
+            }
+        }
+        
+        if (count > 0) {
+            showMessage(true, 'Corretto!', `La vocale "${guess}" è presente ${count} volte.`);
+        } else {
+            showMessage(true, 'Sbagliato!', `Mi dispiace, la vocale "${guess}" non è nella frase.`);
+            nextTurn();
+        }
+
+        vowelInput.value = '';
+        updateDisplay();
+        
+        const allGuessed = currentPhrase.split('').every(char => char === ' ' || guessedLetters.has(char));
+        if (allGuessed) {
+            winRound();
+        }
+    }
+
+    function handlePhraseGuess() {
+        const guess = phraseGuessInput.value.trim().toUpperCase();
+        phraseGuessInput.value = '';
+        
+        if (guess === currentPhrase) {
+            players[currentPlayerIndex].score += 1000;
+            winRound();
+        } else {
+            players[currentPlayerIndex].score = Math.max(0, players[currentPlayerIndex].score - 100);
+            updateDisplay();
+            showMessage(true, 'Sbagliato!', `Mi dispiace, la frase non è "${guess}". Hai perso €100.`);
+            nextTurn();
+        }
+    }
+    
+    function getRoundName() {
+        const roundNames = ['musical', 'mistero', 'cruciruota', 'express', 'ultimo'];
+        return roundNames[roundIndex];
+    }
+
+    function winRound() {
+        currentPhrase.split('').forEach(char => guessedLetters.add(char));
+        updateDisplay();
+        
+        if (gameMode === 'tv') {
+            players[currentPlayerIndex].totalScore += players[currentPlayerIndex].score;
+            showMessage(true, 'Hai Vinto il Round!', `${players[currentPlayerIndex].name} ha indovinato la frase: ${currentPhrase}!`);
+            
+            setTimeout(() => {
+                roundIndex++;
+                if (roundIndex < 5) {
+                    gameScreen.classList.remove('hidden');
+                    initializeGame(getRoundName());
+                    showMessage(true, 'Nuovo Round!', `Inizia il round ${roundIndex + 1}.`);
+                } else {
+                    const winner = players.reduce((prev, curr) => (prev.totalScore > curr.totalScore) ? prev : curr);
+                    currentPlayerIndex = players.indexOf(winner);
+                    showMessage(true, 'Fine Partita!', `La fase classica è terminata! Il vincitore è ${winner.name} con un totale di €${winner.totalScore}.`);
+                    setTimeout(startFinalRound, 3000);
+                }
+            }, 3000);
+        } else {
+            showMessage(true, 'Partita Vinta!', `Complimenti! Hai indovinato la frase: ${currentPhrase}!`);
+        }
+    }
+
+    function startFinalRound() {
+        gameScreen.classList.add('hidden');
+        finalRoundScreen.classList.remove('hidden');
+        const prize = finalPrizeValues[Math.floor(Math.random() * finalPrizeValues.length)];
+        finalPrizeValue.textContent = `€${prize}`;
+
+        const initialLetters = "NRTE";
+        const consonants = "BCDFGHJKLMNPQRSTVWXYZ";
+        const vowels = "AEIOU";
+
+        currentPhrase = finalRoundPhrases[Math.floor(Math.random() * finalRoundPhrases.length)];
+        guessedLetters.clear();
+        finalPhraseGuessInput.value = '';
+
+        for (const char of initialLetters) {
+            guessedLetters.add(char);
+        }
+
+        finalConsonantsChoice.value = '';
+        finalVowelChoice.value = '';
+        finalLetterButton.disabled = false;
+        finalPhraseGuessButton.disabled = true;
+
+        updateFinalDisplay();
+        showMessage(true, 'La Ruota Finale!', `Ora hai 15 secondi per indovinare la frase! Scegli altre 3 consonanti e 1 vocale.`);
+    }
+
+    function updateFinalDisplay() {
+        finalRoundPhraseDisplay.innerHTML = '';
+        currentPhrase.split('').forEach((char) => {
+            const tile = document.createElement('div');
+            tile.classList.add('letter-tile');
+            if (char === ' ') {
+                tile.style.backgroundColor = 'transparent';
+                tile.style.boxShadow = 'none';
+                tile.textContent = '';
+                tile.style.width = '1rem';
+            } else {
+                if (guessedLetters.has(char)) {
+                    tile.textContent = char;
+                    tile.classList.add('guessed');
+                } else {
+                    tile.textContent = '_';
+                }
+            }
+            finalRoundPhraseDisplay.appendChild(tile);
+        });
+    }
+
+    function handleFinalLetters() {
+        const consChoice = finalConsonantsChoice.value.trim().toUpperCase();
+        const vowelChoice = finalVowelChoice.value.trim().toUpperCase();
+        
+        if (consChoice.length !== 3 || !/^[B-DF-HJ-NP-TV-Z]{3}$/.test(consChoice) || vowelChoice.length !== 1 || !/^[AEIOU]$/.test(vowelChoice)) {
+            showMessage(true, 'Errore!', 'Inserisci 3 consonanti e 1 vocale valide.');
+            return;
+        }
+
+        for (const char of consChoice) {
+            guessedLetters.add(char);
+        }
+        guessedLetters.add(vowelChoice);
+        
+        updateFinalDisplay();
+        finalLetterButton.disabled = true;
+        finalConsonantsChoice.disabled = true;
+        finalVowelChoice.disabled = true;
+        finalPhraseGuessInput.disabled = false;
+        finalPhraseGuessButton.disabled = false;
+        
+        showMessage(true, 'Tempo Scaduto!', "Ora indovina la frase in 15 secondi!");
+
+        let timeLeft = 15;
+        const timerInterval = setInterval(() => {
+            if (timeLeft > 0) {
+                finalRoundSubtitle.textContent = `Hai ${timeLeft} secondi per indovinare la frase!`;
+                timeLeft--;
+            } else {
+                clearInterval(timerInterval);
+                finalPhraseGuessButton.disabled = true;
+                finalPhraseGuessInput.disabled = true;
+                showMessage(true, 'Tempo Scaduto!', `La frase era: ${currentPhrase}. Prova ancora!`);
+            }
+        }, 1000);
+        
+        finalPhraseGuessButton.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            handleFinalPhraseGuess();
+        }, { once: true });
+    }
+
+    function handleFinalPhraseGuess() {
+        const guess = finalPhraseGuessInput.value.trim().toUpperCase();
+        const prizeValue = parseInt(finalPrizeValue.textContent.replace('€', ''), 10);
+        
+        if (guess === currentPhrase) {
+            players[currentPlayerIndex].totalScore += prizeValue;
+            showMessage(true, 'Vittoria!', `Complimenti! Hai indovinato la frase: ${currentPhrase}! Hai vinto un totale di €${players[currentPlayerIndex].totalScore}!`);
+            finalPhraseGuessButton.disabled = true;
+        } else {
+            showMessage(true, 'Sconfitta!', `Mi dispiace, la frase non era "${guess}". La frase corretta era "${currentPhrase}". Hai vinto comunque il tuo montepremi di €${players[currentPlayerIndex].totalScore}.`);
+            finalPhraseGuessButton.disabled = true;
+        }
+    }
+
+
+    // Event Listeners
+    simpleModeButton.addEventListener('click', () => selectGameMode('simple'));
+    tvModeButton.addEventListener('click', () => selectGameMode('tv'));
+    startButton.addEventListener('click', startGame);
+    playerCountInput.addEventListener('change', updatePlayerInputs);
+    spinButton.addEventListener('click', handleSpin);
+    freeSpinButton.addEventListener('click', handleFreeSpin);
+    jollyButton.addEventListener('click', handleJollyGuess);
+    consonantButton.addEventListener('click', handleConsonantGuess);
+    vowelButton.addEventListener('click', handleVowelGuess);
+    phraseGuessButton.addEventListener('click', handlePhraseGuess);
+    fastPhraseGuessButton.addEventListener('click', handleFastPhraseGuess);
+
+    finalLetterButton.addEventListener('click', handleFinalLetters);
+    finalPhraseGuessButton.addEventListener('click', handleFinalPhraseGuess);
+    
+    // New Game Buttons
+    const newGameButtons = document.querySelectorAll('.new-game-button');
+    newGameButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            gameScreen.classList.add('hidden');
+            finalRoundScreen.classList.add('hidden');
+            fastRoundScreen.classList.add('hidden');
+            modeSelectionScreen.classList.remove('hidden');
+            subtitle.textContent = 'Scegli la modalità di gioco e poi gira la ruota!';
+        });
+    });
+
+    window.onload = updatePlayerInputs;
+</script>
+
+</body>
+</html>

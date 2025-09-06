@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obbligo o Verità</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #E0E0E0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+        }
+        .game-container {
+            background-color: #1E1E1E;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn {
+            background-color: #3B82F6;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            font-size: 1.125rem;
+            transition: transform 0.2s, background-color 0.2s;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            margin: 0.5rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            background-color: #2563EB;
+        }
+        .btn-secondary {
+            background-color: #4B5563;
+            box-shadow: 0 4px 15px rgba(75, 85, 99, 0.4);
+        }
+        .btn-secondary:hover {
+            background-color: #374151;
+        }
+        .question-card {
+            background-color: #2D2D2D;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-top: 2rem;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .back-btn {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: #374151;
+            box-shadow: none;
+        }
+        .back-btn:hover {
+            background-color: #4B5563;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <div id="game-container" class="game-container">
+
+        <!-- Main Menu Screen -->
+        <div id="main-menu-screen" class="screen">
+            <h1 class="text-4xl font-bold mb-8 text-center text-blue-400">Obbligo o Verità</h1>
+            <div class="flex flex-col space-y-4">
+                <button id="start-classic-btn" class="btn">Modalità Classica</button>
+                <button id="start-events-btn" class="btn btn-secondary">Modalità Eventi</button>
+                <a id="home-btn" href="../../index.html" class="btn btn-secondary">Vai a Home</a>
+                <div class="flex justify-center mt-6">
+                    <select id="language-selector" class="bg-gray-700 text-white p-2 rounded-lg cursor-pointer transition duration-300">
+                        <option value="it">Italiano</option>
+                        <option value="en">English</option>
+                        <option value="de">Deutsch</option>
+                        <option value="fr">Français</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Classic Game Screen -->
+        <div id="classic-game-screen" class="screen hidden">
+            <div class="header">
+                <button id="back-classic-btn" class="btn back-btn">← Torna Indietro</button>
+            </div>
+            <h2 class="text-3xl font-bold mb-4 text-blue-400">Modalità Classica</h2>
+            <div class="question-card">
+                <p id="classic-question-text" class="question-text">Premi un pulsante per iniziare il gioco!</p>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
+                <button id="classic-truth-btn" class="btn">Verità</button>
+                <button id="classic-dare-btn" class="btn">Obbligo</button>
+            </div>
+        </div>
+
+        <!-- Events Menu Screen -->
+        <div id="events-menu-screen" class="screen hidden">
+            <div class="header">
+                <button id="back-events-menu-btn" class="btn back-btn">← Torna Indietro</button>
+            </div>
+            <h2 class="text-3xl font-bold mb-8 text-blue-400">Modalità Eventi</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button data-category="parties" class="btn category-btn">Feste</button>
+                <button data-category="games0-10" class="btn category-btn">Giochi 0-10</button>
+                <button data-category="games10-20" class="btn category-btn">Giochi 10-20</button>
+                <button data-category="games20+" class="btn category-btn">Giochi 20+</button>
+                <button data-category="various" class="btn category-btn">Varie</button>
+            </div>
+        </div>
+
+        <!-- Events Game Screen -->
+        <div id="events-game-screen" class="screen hidden">
+            <div class="header">
+                <button id="back-events-game-btn" class="btn back-btn">← Torna Indietro</button>
+            </div>
+            <h2 id="events-game-title" class="text-3xl font-bold mb-4 text-blue-400"></h2>
+            <div class="question-card">
+                <p id="events-question-text" class="question-text">Premi un pulsante per iniziare il gioco!</p>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
+                <button id="events-truth-btn" class="btn">Verità</button>
+                <button id="events-dare-btn" class="btn">Obbligo</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Data and content of the game in all languages
+        const gameData = {
+            it: {
+                title: "Obbligo o Verità",
+                modes: {
+                    classic: "Modalità Classica",
+                    events: "Modalità Eventi",
+                    homeBtn: "Vai a Home"
+                },
+                categories: {
+                    parties: "Feste",
+                    "games0-10": "Giochi 0-10",
+                    "games10-20": "Giochi 10-20",
+                    "games20+": "Giochi 20+",
+                    various: "Varie"
+                },
+                back: "← Torna Indietro",
+                start: "Inizia il Gioco",
+                truth: "Verità",
+                dare: "Obbligo",
+                initialMessage: "Premi un pulsante per iniziare il gioco!",
+                questions: {
+                    classic: {
+                        truth: [
+                            "Qual è la cosa più imbarazzante che ti sia mai successa?",
+                            "Qual è il tuo più grande rimpianto?",
+                            "Cosa faresti se vincessi la lotteria domani?",
+                            "Chi ti piace in segreto?",
+                            "Qual è la cosa più strana che hai mangiato?",
+                            "Qual è il tuo soprannome e perché?",
+                            "Quando hai pianto l'ultima volta?",
+                            "Se potessi cambiare una cosa di te stesso, quale sarebbe?",
+                            "Qual è il tuo più grande sogno?",
+                            "Cosa pensi davvero dei social media?",
+                            "Qual è il tuo guilty pleasure?",
+                            "Chi in questo gruppo ti fa più ridere?",
+                            "Cosa preferisci tra mare e montagna?"
+                        ],
+                        dare: [
+                            "Balla come se non ci fosse un domani per 30 secondi.",
+                            "Canta la prima canzone che ti viene in mente.",
+                            "Fai 10 flessioni.",
+                            "Manda un messaggio al tuo ex.",
+                            "Parla con un accento strano per i prossimi tre turni.",
+                            "Fai una telefonata a un numero a caso e dì 'Ciao, ti chiamo per farti una domanda: tu sei la persona giusta per me?'.",
+                            "Fai finta di essere un robot per 1 minuto.",
+                            "Fai un massaggio a chiunque in questo gruppo.",
+                            "Scrivi una poesia improvvisata su una persona nel gruppo.",
+                            "Indossa un indumento al contrario per il resto del gioco.",
+                            "Mangia un cucchiaio di senape."
+                        ]
+                    },
+                    events: {
+                        parties: {
+                            truth: [
+                                "Qual è il segreto più grande che hai nascosto durante una festa?",
+                                "Qual è stata la peggiore festa a cui tu abbia mai partecipato?",
+                                "Qual è il tuo drink preferito per una festa?"
+                            ],
+                            dare: [
+                                "Urla 'Viva la festa!' dalla finestra più vicina.",
+                                "Fai un brindisi improvvisato per qualcuno nel gruppo."
+                            ]
+                        },
+                        "games0-10": {
+                            truth: [
+                                "Cosa hai fatto per festeggiare il tuo ultimo compleanno?",
+                                "Qual è il tuo cartone animato preferito?",
+                                "Chi è il tuo migliore amico?"
+                            ],
+                            dare: [
+                                "Imita un gatto per 30 secondi.",
+                                "Racconta una barzelletta."
+                            ]
+                        },
+                        "games10-20": {
+                            truth: [
+                                "Qual è la cosa più folle che hai fatto in questo periodo?",
+                                "Qual è il tuo primo bacio?",
+                                "Chi ti piace segretamente?"
+                            ],
+                            dare: [
+                                "Scrivi una poesia a qualcuno nel gruppo.",
+                                "Fai un video su TikTok."
+                            ]
+                        },
+                        "games20+": {
+                            truth: [
+                                "Qual è la peggiore data che tu abbia mai avuto?",
+                                "Se potessi viaggiare indietro nel tempo, cosa cambieresti?",
+                                "Qual è la cosa più costosa che hai comprato?"
+                            ],
+                            dare: [
+                                "Invia un messaggio a un contatto a caso e chiedi 'Perché mi hai ignorato?'",
+                                "Canta una canzone d'amore per una persona nel gruppo."
+                            ]
+                        },
+                        various: {
+                            truth: [
+                                "Qual è il tuo supereroe preferito e perché?",
+                                "Se fossi un animale, quale saresti?",
+                                "Qual è la tua abitudine più strana?"
+                            ],
+                            dare: [
+                                "Fai finta di suonare la chitarra elettrica.",
+                                "Metti un cubetto di ghiaccio nel colletto della maglietta e aspetta che si sciolga."
+                            ]
+                        }
+                    }
+                }
+            },
+            en: {
+                title: "Truth or Dare",
+                modes: {
+                    classic: "Classic Mode",
+                    events: "Events Mode",
+                    homeBtn: "Go to Home"
+                },
+                categories: {
+                    parties: "Parties",
+                    "games0-10": "Games 0-10",
+                    "games10-20": "Games 10-20",
+                    "games20+": "Games 20+",
+                    various: "Various"
+                },
+                back: "← Back",
+                start: "Start Game",
+                truth: "Truth",
+                dare: "Dare",
+                initialMessage: "Press a button to start the game!",
+                questions: {
+                    classic: {
+                        truth: [
+                            "What's the most embarrassing thing that ever happened to you?",
+                            "What is your biggest regret?",
+                            "What would you do if you won the lottery tomorrow?",
+                            "Who do you have a secret crush on?",
+                            "What's the weirdest thing you've ever eaten?",
+                            "What's your nickname and why?",
+                            "When was the last time you cried?",
+                            "If you could change one thing about yourself, what would it be?",
+                            "What's your biggest dream?",
+                            "What do you really think about social media?",
+                            "What's your guilty pleasure?",
+                            "Who in this group makes you laugh the most?",
+                            "What do you prefer between the sea and the mountains?"
+                        ],
+                        dare: [
+                            "Dance like there's no tomorrow for 30 seconds.",
+                            "Sing the first song that comes to mind.",
+                            "Do 10 push-ups.",
+                            "Send a text message to your ex.",
+                            "Talk in a strange accent for the next three turns.",
+                            "Make a phone call to a random number and say 'Hello, I'm calling to ask you a question: are you the right person for me?'.",
+                            "Pretend to be a robot for 1 minute.",
+                            "Give a massage to anyone in this group.",
+                            "Write an improvised poem about a person in the group.",
+                            "Wear an item of clothing backwards for the rest of the game.",
+                            "Eat a spoonful of mustard."
+                        ]
+                    },
+                    events: {
+                        parties: {
+                            truth: [
+                                "What's the biggest secret you've hidden at a party?",
+                                "What was the worst party you've ever been to?",
+                                "What's your favorite party drink?"
+                            ],
+                            dare: [
+                                "Yell 'Long live the party!' from the nearest window.",
+                                "Give an improvised toast for someone in the group."
+                            ]
+                        },
+                        "games0-10": {
+                            truth: [
+                                "What did you do to celebrate your last birthday?",
+                                "What is your favorite cartoon?",
+                                "Who is your best friend?"
+                            ],
+                            dare: [
+                                "Imitate a cat for 30 seconds.",
+                                "Tell a joke."
+                            ]
+                        },
+                        "games10-20": {
+                            truth: [
+                                "What's the craziest thing you've done during this time?",
+                                "What was your first kiss like?",
+                                "Who is your secret crush?"
+                            ],
+                            dare: [
+                                "Write a poem for someone in the group.",
+                                "Make a TikTok video."
+                            ]
+                        },
+                        "games20+": {
+                            truth: [
+                                "What's the worst date you've ever had?",
+                                "If you could travel back in time, what would you change?",
+                                "What's the most expensive thing you've ever bought?"
+                            ],
+                            dare: [
+                                "Send a text to a random contact and ask, 'Why did you ignore me?'",
+                                "Sing a love song to a person in the group."
+                            ]
+                        },
+                        various: {
+                            truth: [
+                                "What's your favorite superhero and why?",
+                                "If you were an animal, what would you be?",
+                                "What is your strangest habit?"
+                            ],
+                            dare: [
+                                "Pretend to play an electric guitar.",
+                                "Put an ice cube down your shirt collar and wait for it to melt."
+                            ]
+                        }
+                    }
+                }
+            },
+            de: {
+                title: "Wahrheit oder Pflicht",
+                modes: {
+                    classic: "Klassischer Modus",
+                    events: "Ereignismodus",
+                    homeBtn: "Zur Startseite"
+                },
+                categories: {
+                    parties: "Partys",
+                    "games0-10": "Spiele 0-10",
+                    "games10-20": "Spiele 10-20",
+                    "games20+": "Spiele 20+",
+                    various: "Verschiedenes"
+                },
+                back: "← Zurück",
+                start: "Spiel starten",
+                truth: "Wahrheit",
+                dare: "Pflicht",
+                initialMessage: "Drücken Sie eine Taste, um das Spiel zu starten!",
+                questions: {
+                    classic: {
+                        truth: [
+                            "Was ist das peinlichste, was dir je passiert ist?",
+                            "Was bereust du am meisten?",
+                            "Was würdest du tun, wenn du morgen im Lotto gewinnen würdest?",
+                            "In wen bist du heimlich verknallt?",
+                            "Was ist das Verrückteste, was du jemals gegessen hast?",
+                            "Wie lautet dein Spitzname und warum?",
+                            "Wann hast du das letzte Mal geweint?",
+                            "Wenn du eine Sache an dir ändern könntest, welche wäre das?",
+                            "Was ist dein größter Traum?",
+                            "Was denkst du wirklich über soziale Medien?",
+                            "Was ist dein Guilty Pleasure?",
+                            "Wer in dieser Gruppe bringt dich am meisten zum Lachen?",
+                            "Was bevorzugst du, Meer oder Berge?"
+                        ],
+                        dare: [
+                            "Tanze 30 Sekunden lang, als gäbe es kein Morgen.",
+                            "Sing das erste Lied, das dir in den Sinn kommt.",
+                            "Mache 10 Liegestütze.",
+                            "Schicke deinem Ex eine SMS.",
+                            "Sprich die nächsten drei Runden mit einem seltsamen Akzent.",
+                            "Rufe eine zufällige Nummer an und sage 'Hallo, ich rufe dich an, um eine Frage zu stellen: Bist du die richtige Person für mich?'.",
+                            "Tu so, als wärst du 1 Minute lang ein Roboter.",
+                            "Gib jemandem in dieser Gruppe eine Massage.",
+                            "Schreibe ein improvisiertes Gedicht über eine Person in der Gruppe.",
+                            "Trage ein Kleidungsstück für den Rest des Spiels rückwärts.",
+                            "Iss einen Löffel Senf."
+                        ]
+                    },
+                    events: {
+                        parties: {
+                            truth: [
+                                "Was ist das größte Geheimnis, das du auf einer Party versteckt hast?",
+                                "Was war die schlimmste Party, auf der du je warst?",
+                                "Was ist dein Lieblingsgetränk für eine Party?"
+                            ],
+                            dare: [
+                                "Schreie 'Es lebe die Party!' aus dem nächsten Fenster.",
+                                "Halte einen spontanen Toast auf jemanden in der Gruppe."
+                            ]
+                        },
+                        "games0-10": {
+                            truth: [
+                                "Was hast du zu deinem letzten Geburtstag gemacht?",
+                                "Was ist dein Lieblings-Cartoon?",
+                                "Wer ist dein bester Freund?"
+                            ],
+                            dare: [
+                                "Imitiere 30 Sekunden lang eine Katze.",
+                                "Erzähle einen Witz."
+                            ]
+                        },
+                        "games10-20": {
+                            truth: [
+                                "Was ist das Verrückteste, was du in dieser Zeit gemacht hast?",
+                                "Wie war dein erster Kuss?",
+                                "In wen bist du heimlich verknallt?"
+                            ],
+                            dare: [
+                                "Schreibe ein Gedicht für jemanden in der Gruppe.",
+                                "Mache ein TikTok-Video."
+                            ]
+                        },
+                        "games20+": {
+                            truth: [
+                                "Was war das schlimmste Date, das du je hattest?",
+                                "Wenn du in der Zeit zurückreisen könntest, was würdest du ändern?",
+                                "Was ist das teuerste, was du je gekauft hast?"
+                            ],
+                            dare: [
+                                "Schicke einem zufälligen Kontakt eine Nachricht und frage: 'Warum hast du mich ignoriert?'",
+                                "Singe ein Liebeslied für eine Person in der Gruppe."
+                            ]
+                        },
+                        various: {
+                            truth: [
+                                "Wer ist dein Lieblingssuperheld und warum?",
+                                "Wenn du ein Tier wärst, welches wärst du?",
+                                "Was ist deine seltsamste Angewohnheit?"
+                            ],
+                            dare: [
+                                "Tu so, als würdest du eine E-Gitarre spielen.",
+                                "Stecke einen Eiswürfel in deinen Hemdkragen und warte, bis er schmilzt."
+                            ]
+                        }
+                    }
+                }
+            },
+            fr: {
+                title: "Action ou Vérité",
+                modes: {
+                    classic: "Mode Classique",
+                    events: "Mode Événements",
+                    homeBtn: "Aller à la page d'accueil"
+                },
+                categories: {
+                    parties: "Fêtes",
+                    "games0-10": "Jeux 0-10",
+                    "games10-20": "Jeux 10-20",
+                    "games20+": "Jeux 20+",
+                    various: "Divers"
+                },
+                back: "← Retour",
+                start: "Commencer le jeu",
+                truth: "Vérité",
+                dare: "Action",
+                initialMessage: "Appuyez sur un bouton pour commencer le jeu !",
+                questions: {
+                    classic: {
+                        truth: [
+                            "Quelle est la chose la plus embarrassante qui te soit jamais arrivée ?",
+                            "Quel est ton plus grand regret ?",
+                            "Que ferais-tu si tu gagnais à la loterie demain ?",
+                            "Qui aimes-tu en secret ?",
+                            "Quelle est la chose la plus étrange que tu aies jamais mangée ?",
+                            "Quel est ton surnom et pourquoi ?",
+                            "Quand as-tu pleuré la dernière fois ?",
+                            "Si tu pouvais changer une chose chez toi, quelle serait-elle ?",
+                            "Quel est ton plus grand rêve ?",
+                            "Que penses-tu vraiment des réseaux sociaux ?",
+                            "Quel est ton plaisir coupable ?",
+                            "Qui dans ce groupe te fait le plus rire ?",
+                            "Que préfères-tu entre la mer et la montagne ?"
+                        ],
+                        dare: [
+                            "Danse comme s'il n'y avait pas de lendemain pendant 30 secondes.",
+                            "Chante la première chanson qui te vient à l'esprit.",
+                            "Fais 10 pompes.",
+                            "Envoie un message à ton ex.",
+                            "Parle avec un accent bizarre pendant les trois prochains tours.",
+                            "Appelle un numéro au hasard et dis 'Bonjour, je t'appelle pour te poser une question : es-tu la bonne personne pour moi ?'.",
+                            "Fais semblant d'être un robot pendant 1 minute.",
+                            "Fais un massage à quelqu'un dans ce groupe.",
+                            "Écris un poème improvisé sur une personne du groupe.",
+                            "Porte un vêtement à l'envers pour le reste du jeu.",
+                            "Mange une cuillère de moutarde."
+                        ]
+                    },
+                    events: {
+                        parties: {
+                            truth: [
+                                "Quel est le plus grand secret que tu aies caché lors d'une fête ?",
+                                "Quelle a été la pire fête à laquelle tu aies jamais participé ?",
+                                "Quelle est ta boisson préférée pour une fête?"
+                            ],
+                            dare: [
+                                "Crie 'Vive la fête !' par la fenêtre la plus proche.",
+                                "Fais un toast improvisé pour quelqu'un du groupe."
+                            ]
+                        },
+                        "games0-10": {
+                            truth: [
+                                "Qu'as-tu fait pour fêter ton dernier anniversaire ?",
+                                "Quel est ton dessin animé préféré ?",
+                                "Qui est ton meilleur ami ?"
+                            ],
+                            dare: [
+                                "Imite un chat pendant 30 secondi.",
+                                "Raconte une barzelletta."
+                            ]
+                        },
+                        "games10-20": {
+                            truth: [
+                                "Quelle est la chose la plus folle que tu aies faite pendant cette période ?",
+                                "Quel a été ton premier baiser ?",
+                                "Qui est ton amour secret ?"
+                            ],
+                            dare: [
+                                "Écris un poème pour quelqu'un du groupe.",
+                                "Fais une vidéo sur TikTok."
+                            ]
+                        },
+                        "games20+": {
+                            truth: [
+                                "Quel est le pire rendez-vous que tu aies jamais eu ?",
+                                "Si tu pouvais voyager dans le temps, que changerais-tu ?",
+                                "Quelle est la chose la plus chère que tu aies jamais achetée ?"
+                            ],
+                            dare: [
+                                "Envia um mensagem a um contato au hasard et demande 'Pourquoi m'as-tu ignoré ?'",
+                                "Chante une chanson d'amour pour une persona del grupo."
+                            ]
+                        },
+                        various: {
+                            truth: [
+                                "Quel est ton super-héros préféré et pourquoi ?",
+                                "Si tu étais un animal, lequel serais-tu ?",
+                                "Quelle est ton habitude la plus étrange ?"
+                            ],
+                            dare: [
+                                "Fais semblant de jouer de la guitare électrique.",
+                                "Metti un glaçon dans le col de ta chemise et attends qu'il fonde."
+                            ]
+                        }
+                    }
+                }
+            }
+        };
+
+        const screens = ['main-menu-screen', 'classic-game-screen', 'events-menu-screen', 'events-game-screen'];
+        const languageSelector = document.getElementById('language-selector');
+        let currentLanguage = localStorage.getItem('language') || 'it';
+        let currentCategory = null;
+
+        // Function to switch between screens
+        function showScreen(screenId) {
+            screens.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // Function to update all text on the page based on the language
+        function updateText() {
+            const data = gameData[currentLanguage];
+
+            // Main Menu
+            document.querySelector('#main-menu-screen h1').textContent = data.title;
+            document.getElementById('start-classic-btn').textContent = data.modes.classic;
+            document.getElementById('start-events-btn').textContent = data.modes.events;
+            document.getElementById('home-btn').textContent = data.modes.homeBtn;
+
+            // Classic Game
+            document.querySelector('#classic-game-screen h2').textContent = data.modes.classic;
+            document.getElementById('back-classic-btn').textContent = data.back;
+            document.getElementById('classic-truth-btn').textContent = data.truth;
+            document.getElementById('classic-dare-btn').textContent = data.dare;
+            document.getElementById('classic-question-text').textContent = data.initialMessage;
+
+            // Events Menu
+            document.querySelector('#events-menu-screen h2').textContent = data.modes.events;
+            document.getElementById('back-events-menu-btn').textContent = data.back;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                const categoryKey = btn.dataset.category;
+                btn.textContent = data.categories[categoryKey];
+            });
+
+            // Events Game
+            document.getElementById('back-events-game-btn').textContent = data.back;
+            document.getElementById('events-truth-btn').textContent = data.truth;
+            document.getElementById('events-dare-btn').textContent = data.dare;
+            document.getElementById('events-question-text').textContent = data.initialMessage;
+
+            // Update language selector
+            languageSelector.value = currentLanguage;
+        }
+
+        // Function to generate and display a question
+        function generateQuestion(type) {
+            let questionArray;
+            let questionTextElement;
+
+            if (currentCategory) {
+                questionArray = gameData[currentLanguage].questions.events[currentCategory][type];
+                questionTextElement = document.getElementById('events-question-text');
+            } else {
+                questionArray = gameData[currentLanguage].questions.classic[type];
+                questionTextElement = document.getElementById('classic-question-text');
+            }
+
+            const randomIndex = Math.floor(Math.random() * questionArray.length);
+            questionTextElement.textContent = questionArray[randomIndex];
+        }
+
+        // Event Listeners
+        document.getElementById('start-classic-btn').addEventListener('click', () => {
+            currentCategory = null;
+            showScreen('classic-game-screen');
+        });
+
+        document.getElementById('start-events-btn').addEventListener('click', () => {
+            showScreen('events-menu-screen');
+        });
+
+        document.getElementById('classic-truth-btn').addEventListener('click', () => {
+            generateQuestion('truth');
+        });
+
+        document.getElementById('classic-dare-btn').addEventListener('click', () => {
+            generateQuestion('dare');
+        });
+
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentCategory = btn.dataset.category;
+                document.getElementById('events-game-title').textContent = gameData[currentLanguage].categories[currentCategory];
+                showScreen('events-game-screen');
+            });
+        });
+
+        document.getElementById('events-truth-btn').addEventListener('click', () => {
+            generateQuestion('truth');
+        });
+
+        document.getElementById('events-dare-btn').addEventListener('click', () => {
+            generateQuestion('dare');
+        });
+
+        document.getElementById('back-classic-btn').addEventListener('click', () => {
+            showScreen('main-menu-screen');
+        });
+
+        document.getElementById('back-events-menu-btn').addEventListener('click', () => {
+            showScreen('main-menu-screen');
+        });
+
+        document.getElementById('back-events-game-btn').addEventListener('click', () => {
+            showScreen('events-menu-screen');
+        });
+
+        languageSelector.addEventListener('change', (event) => {
+            currentLanguage = event.target.value;
+            localStorage.setItem('language', currentLanguage);
+            updateText();
+        });
+        
+        // Initialize the game
+        window.onload = () => {
+            updateText();
+            showScreen('main-menu-screen');
+        };
+
+    </script>
+</body>
+</html>
